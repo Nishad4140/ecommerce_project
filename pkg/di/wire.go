@@ -14,8 +14,11 @@ func InitializeAPI1(cfg config.Config) (*http.ServerHTTP, error) {
 	wire.Build(
 		db.ConnectDatabse,
 		repository.NewUserRepository,
+		repository.NewAdminRepository,
 		usecase.NewUserUseCase,
+		usecase.NewAdminUseCase,
 		handler.NewUserHandler,
+		handler.NewAdminHandler,
 		http.NewServerHTTP,
 	)
 	return &http.ServerHTTP{}, nil

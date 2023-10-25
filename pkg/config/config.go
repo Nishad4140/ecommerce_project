@@ -30,8 +30,8 @@ var envs = []string{
 func LoadConfig() (Config, error) {
 	var config Config
 
-	viper.AddConfigPath("ecommerce_project/cmd/api/.env")
-	viper.SetConfigFile(".env")
+	viper.AddConfigPath("../../.env")
+	viper.SetConfigFile("../../.env")
 	viper.ReadInConfig()
 
 	for _, env := range envs {

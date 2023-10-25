@@ -6,7 +6,8 @@ import (
 	"github.com/Nishad4140/ecommerce_project/pkg/domain"
 )
 
-type UserRepository interface {
-	UserSignUp(user helper.UserReq) (response.UserData, error)
-	UserLogin(email string) (domain.Users, error)
+type AdminRepository interface {
+	AdminLogin(email string) (domain.Admins, error)
+	ReportUser(reason helper.ReportData, adminId int) error
+	ShowUser(userID int) (response.UserDetails, error)
 }
