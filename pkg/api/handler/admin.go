@@ -142,3 +142,26 @@ func (cr *AdminHandler) ShowUser(c *gin.Context) {
 	})
 
 }
+
+//-------------------------- Show-All-Users --------------------------//
+
+func (cr *AdminHandler) ShowAllUsers(c *gin.Context) {
+	users, err := cr.adminUseCase.ShowAllUser()
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Response{
+			StatusCode: 400,
+			Message:    "cant find user",
+			Data:       nil,
+			Errors:     err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, response.Response{
+		StatusCode: 200,
+		Message:    "users are",
+		Data:       users,
+		Errors:     nil,
+	})
+
+}

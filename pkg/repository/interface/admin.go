@@ -10,4 +10,5 @@ type AdminRepository interface {
 	AdminLogin(email string) (domain.Admins, error)
 	ReportUser(reason helper.ReportData, adminId int) error
 	ShowUser(userID int) (response.UserDetails, error)
+	ShowAllUser()([]response.UserDetails,error)
 }

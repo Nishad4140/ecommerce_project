@@ -9,4 +9,5 @@ type AdminUseCase interface {
 	AdminLogin(admin helper.LoginReq) (string, error)
 	ReportUser(reason helper.ReportData, adminID int) error
 	ShowUser(userID int) (response.UserDetails, error)
+	ShowAllUser() ([]response.UserDetails, error)
 }

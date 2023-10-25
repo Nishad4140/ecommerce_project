@@ -81,3 +81,24 @@ func (c *adminDatabase) ShowUser(userID int) (response.UserDetails, error) {
 	}
 	return userData, nil
 }
+
+//-------------------------- Show-All-Users --------------------------//
+
+func(c *adminDatabase) ShowAllUser()([]response.UserDetails,error){
+	var userDatas []response.UserDetails
+
+	getUsers:= `SELECT users.name,
+				users.email, 
+				users.mobile,
+				users.report_count,  
+				users.is_blocked, 
+				block_infos.blocked_by,
+				block_infos.blocked_at,
+				block_infos.reason_for_blocking 
+				FROM users as users 
+				FULL OUTER JOIN user_report_infos as report_infos ON users.id = report_infos.users_id
+				FULL OUTER JOIN user_block_infos as block_infos ON users.id = block_infos.users_id;`
+
+	err := c.DB.Raw(getUsers).Scan(&userDatas).Error
+	return userDatas, err
+}

@@ -45,7 +45,8 @@ func NewServerHTTP(
 			adminUsers := admin.Group("/user")
 			{
 				adminUsers.PATCH("/report", adminHandler.ReportUser)
-				adminUsers.GET("/list/:user_id",adminHandler.ShowUser)
+				adminUsers.GET("/list/:user_id", adminHandler.ShowUser)
+				adminUsers.GET("/listall", adminHandler.ShowAllUsers)
 			}
 		}
 

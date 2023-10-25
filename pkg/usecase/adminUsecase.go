@@ -68,3 +68,10 @@ func (c *adminUseCase) ShowUser(userID int) (response.UserDetails, error) {
 	userData, err := c.adminRepo.ShowUser(userID)
 	return userData, err
 }
+
+// -------------------------- Show-All-Users --------------------------//
+
+func (c *adminUseCase) ShowAllUser() ([]response.UserDetails, error) {
+	userDatas, err := c.adminRepo.ShowAllUser()
+	return userDatas, err
+}
