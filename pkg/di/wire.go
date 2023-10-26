@@ -10,15 +10,18 @@ import (
 	"github.com/google/wire"
 )
 
-func InitializeAPI1(cfg config.Config) (*http.ServerHTTP, error) {
+func InitializeAPI(cfg config.Config) (*http.ServerHTTP, error) {
 	wire.Build(
 		db.ConnectDatabse,
 		repository.NewUserRepository,
 		repository.NewAdminRepository,
+		repository.NewProductRepository,
 		usecase.NewUserUseCase,
 		usecase.NewAdminUseCase,
+		usecase.NewProductUsecase,
 		handler.NewUserHandler,
 		handler.NewAdminHandler,
+		handler.NewProductHandler,
 		http.NewServerHTTP,
 	)
 	return &http.ServerHTTP{}, nil
