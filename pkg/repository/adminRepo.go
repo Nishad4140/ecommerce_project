@@ -84,10 +84,10 @@ func (c *adminDatabase) ShowUser(userID int) (response.UserDetails, error) {
 
 //-------------------------- Show-All-Users --------------------------//
 
-func(c *adminDatabase) ShowAllUser()([]response.UserDetails,error){
+func (c *adminDatabase) ShowAllUser() ([]response.UserDetails, error) {
 	var userDatas []response.UserDetails
 
-	getUsers:= `SELECT users.name,
+	getUsers := `SELECT users.name,
 				users.email, 
 				users.mobile,
 				users.report_count,  
@@ -102,3 +102,17 @@ func(c *adminDatabase) ShowAllUser()([]response.UserDetails,error){
 	err := c.DB.Raw(getUsers).Scan(&userDatas).Error
 	return userDatas, err
 }
+
+// //-------------------------- Create-Seller --------------------------//
+
+// func (c *adminDatabase) CreateSeller(seller helper.CreateSeller, createrId int) (response.SellerData, error) {
+
+// 	var sellerData response.SellerData
+
+// 	query := `INSERT INTO sellers (name,email,mobile,password,created_by,created_at)
+// 								  VALUES($1,$2,$3,$4,$5,NOW())
+// 								  RETURNING id,name,email,mobile;`
+
+// 	err := c.DB.Raw(query, seller.Name, seller.Email, seller.Mobile, seller.Password, createrId).Scan(&sellerData).Error
+// 	return sellerData, err
+// }

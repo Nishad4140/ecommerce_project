@@ -75,3 +75,17 @@ func (c *adminUseCase) ShowAllUser() ([]response.UserDetails, error) {
 	userDatas, err := c.adminRepo.ShowAllUser()
 	return userDatas, err
 }
+
+// // -------------------------- Create-Seller --------------------------//
+
+// func (c *adminUseCase) CreateSeller(seller helper.CreateSeller, createrId int) (response.SellerData, error) {
+
+// 	hash, err := bcrypt.GenerateFromPassword([]byte(seller.Password), 10)
+// 	if err != nil {
+// 		return response.SellerData{}, err
+// 	}
+// 	seller.Password = string(hash)
+// 	sellerData, err := c.adminRepo.CreateSeller(seller, createrId)
+
+// 	return sellerData, err
+// }

@@ -11,3 +11,18 @@ type LoginReq struct {
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password"`
 }
+
+type UpdatePassword struct {
+	OldPassword string `json:"oldpassword" `
+	NewPasswoed string `json:"newpassword" `
+}
+
+type Address struct {
+	House_number string `json:"house_number" `
+	Street       string `json:"street" `
+	City         string `json:"city" `
+	District     string `json:"district" `
+	Landmark     string `json:"landmark" `
+	Pincode      int    `json:"pincode" `
+	IsDefault    bool   `json:"isdefault" `
+}

@@ -1,0 +1,25 @@
+package helper
+
+type Category struct {
+	Name string `json:"name" validate:"required"`
+}
+
+type Brand struct {
+	Name        string `json:"name" validate:"required"`
+	Description string `json:"description" validate:"required"`
+	CategoryId  string `json:"categoryid" validate:"required"`
+}
+
+type Model struct {
+	Brand_id    uint    `json:"productid"`
+	Sku         string  `json:"sku"`
+	Qty         int     `json:"quantity"`
+	Color       string  `json:"colour"`
+	Ram         int     `json:"ram"`
+	Battery     int     `json:"battery"`
+	Screen_size float64 `json:"screensize"`
+	Storage     int     `json:"storage"`
+	Camera      int     `json:"camera"`
+	Price       int     `json:"price"`
+	Image       string  `json:"image"`
+}

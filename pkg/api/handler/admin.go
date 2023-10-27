@@ -61,7 +61,7 @@ func (cr *AdminHandler) AdminLogout(c *gin.Context) {
 	c.SetCookie("adminToken", "", -1, "", "", false, true)
 	c.JSON(http.StatusOK, response.Response{
 		StatusCode: 200,
-		Message:    "user logouted",
+		Message:    "admin logouted",
 		Data:       nil,
 		Errors:     nil,
 	})
@@ -165,3 +165,49 @@ func (cr *AdminHandler) ShowAllUsers(c *gin.Context) {
 	})
 
 }
+
+// //-------------------------- Create-Seller --------------------------//
+
+// func (cr *AdminHandler) CreateSeller(c *gin.Context) {
+// 	var sellerData helper.CreateSeller
+// 	err := c.Bind(&sellerData)
+// 	if err != nil {
+// 		c.JSON(http.StatusBadRequest, response.Response{
+// 			StatusCode: 400,
+// 			Message:    "bind faild",
+// 			Data:       nil,
+// 			Errors:     err.Error(),
+// 		})
+// 		return
+// 	}
+// 	fmt.Println(sellerData)
+// 	createrId, err := handlerutil.GetAdminIdFromContext(c)
+// 	if err != nil {
+// 		c.JSON(http.StatusBadRequest, response.Response{
+// 			StatusCode: 400,
+// 			Message:    "Can't find AdminId",
+// 			Data:       nil,
+// 			Errors:     err.Error(),
+// 		})
+// 		return
+// 	}
+
+// 	sellerDetails, err := cr.adminUseCase.CreateSeller(sellerData, createrId)
+
+// 	if err != nil {
+// 		c.JSON(http.StatusBadRequest, response.Response{
+// 			StatusCode: 400,
+// 			Message:    "Can't Create Seller",
+// 			Data:       nil,
+// 			Errors:     err.Error(),
+// 		})
+// 		return
+// 	}
+
+// 	c.JSON(http.StatusCreated, response.Response{
+// 		StatusCode: 201,
+// 		Message:    "Seller created",
+// 		Data:       sellerDetails,
+// 		Errors:     nil,
+// 	})
+// }

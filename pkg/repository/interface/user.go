@@ -9,4 +9,10 @@ import (
 type UserRepository interface {
 	UserSignUp(user helper.UserReq) (response.UserData, error)
 	UserLogin(email string) (domain.Users, error)
+	ViewProfile(userID int) (response.UserData, error)
+	EditProfile(userID int, updatingDetails helper.UserReq) (response.UserData, error)
+	FindPassword(id int) (string, error)
+	UpdatePassword(id int, newPassword string) error
+	AddAddress(id int, address helper.Address) error
+	UpdateAddress(userID, addressID int, address helper.Address) error
 }

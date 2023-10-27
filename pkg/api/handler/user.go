@@ -2,7 +2,9 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 
+	handlerutil "github.com/Nishad4140/ecommerce_project/pkg/api/handlerUtil"
 	helper "github.com/Nishad4140/ecommerce_project/pkg/common/helperStruct"
 	"github.com/Nishad4140/ecommerce_project/pkg/common/response"
 	services "github.com/Nishad4140/ecommerce_project/pkg/usecase/interface"
@@ -95,6 +97,218 @@ func (cr *UserHandler) UserLogout(c *gin.Context) {
 	c.JSON(http.StatusOK, response.Response{
 		StatusCode: 200,
 		Message:    "user logouted",
+		Data:       nil,
+		Errors:     nil,
+	})
+}
+
+//-------------------------- View-Profile --------------------------//
+
+func (cr *UserHandler) ViewProfile(c *gin.Context) {
+	userID, err := handlerutil.GetUserIdFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Response{
+			StatusCode: 400,
+			Message:    "Can't find Userid",
+			Data:       nil,
+			Errors:     err.Error(),
+		})
+		return
+	}
+	UserData, err := cr.userUseCase.ViewProfile(userID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Response{
+			StatusCode: 400,
+			Message:    "Can't find userprofile",
+			Data:       nil,
+			Errors:     err.Error(),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, response.Response{
+		StatusCode: 200,
+		Message:    "Profile",
+		Data:       UserData,
+		Errors:     nil,
+	})
+}
+
+//-------------------------- Edit-Profile --------------------------//
+
+func (cr *UserHandler) EditProfile(c *gin.Context) {
+	userID, err := handlerutil.GetUserIdFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Response{
+			StatusCode: 400,
+			Message:    "Can't find UserId",
+			Data:       nil,
+			Errors:     err.Error(),
+		})
+		return
+	}
+	var updatingDetails helper.UserReq
+	err = c.Bind(&updatingDetails)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Response{
+			StatusCode: 400,
+			Message:    "Can't bind details",
+			Data:       nil,
+			Errors:     err.Error(),
+		})
+	}
+	updatedProfile, err := cr.userUseCase.EditProfile(userID, updatingDetails)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Response{
+			StatusCode: 400,
+			Message:    "Can't find userprofile",
+			Data:       nil,
+			Errors:     err.Error(),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, response.Response{
+		StatusCode: 200,
+		Message:    "Profile updated",
+		Data:       updatedProfile,
+		Errors:     nil,
+	})
+}
+
+//-------------------------- Update-Password --------------------------//
+
+func (cr *UserHandler) UpdatePassword(c *gin.Context) {
+	userID, err := handlerutil.GetUserIdFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Response{
+			StatusCode: 400,
+			Message:    "Can't find UserId",
+			Data:       nil,
+			Errors:     err.Error(),
+		})
+		return
+	}
+	var Passwords helper.UpdatePassword
+	err = c.Bind(&Passwords)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Response{
+			StatusCode: 400,
+			Message:    "Can't bind",
+			Data:       nil,
+			Errors:     err.Error(),
+		})
+		return
+	}
+	err = cr.userUseCase.UpdatePassword(userID, Passwords)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Response{
+			StatusCode: 400,
+			Message:    "Can't update password",
+			Data:       nil,
+			Errors:     err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, response.Response{
+		StatusCode: 200,
+		Message:    "Password updated",
+		Data:       nil,
+		Errors:     nil,
+	})
+}
+
+//-------------------------- Add-Address --------------------------//
+
+func (cr *UserHandler) AddAddress(c *gin.Context) {
+	userID, err := handlerutil.GetUserIdFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Response{
+			StatusCode: 400,
+			Message:    "Can't find UserId",
+			Data:       nil,
+			Errors:     err.Error(),
+		})
+		return
+	}
+	var address helper.Address
+	err = c.Bind(&address)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Response{
+			StatusCode: 400,
+			Message:    "Can't bind",
+			Data:       nil,
+			Errors:     err.Error(),
+		})
+		return
+	}
+	err = cr.userUseCase.AddAddress(userID, address)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Response{
+			StatusCode: 400,
+			Message:    "Can't add address",
+			Data:       nil,
+			Errors:     err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, response.Response{
+		StatusCode: 200,
+		Message:    "address added",
+		Data:       nil,
+		Errors:     nil,
+	})
+}
+
+//-------------------------- Update-Address --------------------------//
+
+func (cr *UserHandler) UpdateAddress(c *gin.Context) {
+	paramsId := c.Param("addressId")
+	addressID, err := strconv.Atoi(paramsId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Response{
+			StatusCode: 400,
+			Message:    "Can't find AddressId",
+			Data:       nil,
+			Errors:     err.Error(),
+		})
+		return
+	}
+	userID, err := handlerutil.GetUserIdFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Response{
+			StatusCode: 400,
+			Message:    "Can't find UserId",
+			Data:       nil,
+			Errors:     err.Error(),
+		})
+		return
+	}
+	var address helper.Address
+	err = c.Bind(&address)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Response{
+			StatusCode: 400,
+			Message:    "Can't bind",
+			Data:       nil,
+			Errors:     err.Error(),
+		})
+		return
+	}
+	err = cr.userUseCase.UpdateAddress(userID, addressID, address)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Response{
+			StatusCode: 400,
+			Message:    "Can't update address",
+			Data:       nil,
+			Errors:     err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, response.Response{
+		StatusCode: 200,
+		Message:    "address updated",
 		Data:       nil,
 		Errors:     nil,
 	})
