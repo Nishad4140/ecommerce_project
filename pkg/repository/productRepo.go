@@ -30,7 +30,10 @@ func (c *ProductDatabase) CreateCategory(category helper.Category) (response.Cat
 
 func (c *ProductDatabase) UpdatCategory(category helper.Category, id int) (response.Category, error) {
 	var updatedCategory response.Category
-	query := `UPDATE  categories SET category_name = $1 , updated_at =NOW() WHERE EXISTS(SELECT 1 FROM categories WHERE id=$2) RETURNING id,category_name `
+	query := `UPDATE categories
+	          SET category_name = $1, updated_at = NOW()
+	          WHERE id = $2
+	          RETURNING id, category_name`
 	err := c.DB.Raw(query, category.Name, id).Scan(&updatedCategory).Error
 	if err != nil {
 		return response.Category{}, err
@@ -111,7 +114,7 @@ func (c *ProductDatabase) AddProduct(product helper.Brand) (response.Brand, erro
 
 func (c *ProductDatabase) UpdateProduct(id int, product helper.Brand) (response.Brand, error) {
 	var updatedProduct response.Brand
-	query2 := `UPDATE brands SET brand_name=$1,description=$2,category_id=$4,updated_at=NOW() WHERE id=$5
+	query2 := `UPDATE brands SET brand_name=$1,description=$2,category_id=$3,updated_at=NOW() WHERE id=$4
 		RETURNING id,brand_name,description,category_id`
 	err := c.DB.Raw(query2, product.Name, product.Description, product.CategoryId, id).
 		Scan(&updatedProduct).Error
@@ -128,7 +131,7 @@ func (c *ProductDatabase) UpdateProduct(id int, product helper.Brand) (response.
 
 func (c *ProductDatabase) DeleteProduct(id int) error {
 	var exists bool
-	isExists := `SELECT EXISTS (SELECT 1 FROM products WHERE id=$1)`
+	isExists := `SELECT EXISTS (SELECT 1 FROM brands WHERE id=$1)`
 	c.DB.Raw(isExists, id).Scan(&exists)
 	if !exists {
 		return fmt.Errorf("there is no such product to delete")
@@ -175,9 +178,9 @@ func (c *ProductDatabase) ListProduct(id int) (response.Brand, error) {
 func (c *ProductDatabase) AddModel(model helper.Model) (response.Model, error) {
 	var newModel response.Model
 	query := `INSERT INTO models (brand_id,
+		model_name,
 		sku,
 		qty_in_stock,
-		image,
 		color,
 		ram,
 		battery,
@@ -185,22 +188,81 @@ func (c *ProductDatabase) AddModel(model helper.Model) (response.Model, error) {
 		storage,
 		camera,
 		price,
+		image,
 		created_at)
-		VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,NOW())
+		VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,NOW())
 		RETURNING 
 		id,
+		model_name,
 		brand_id,
 		sku,
 		qty_in_stock,
-		image,
 		color,
 		ram,
 		battery,
 		screen_size,
 		storage,
 		camera,
-		price`
+		price,
+		image`
 	err := c.DB.Raw(query, model.Brand_id,
+		model.Model_name,
+		model.Sku,
+		model.Qty,
+		model.Color,
+		model.Ram,
+		model.Battery,
+		model.Screen_size,
+		model.Storage,
+		model.Camera,
+		model.Price,
+		model.Image).Scan(&newModel).Error
+	return newModel, err
+}
+
+// -------------------------- Update-Model --------------------------//
+
+func (c *ProductDatabase) UpdateModel(id int, model helper.Model) (response.Model, error) {
+	var exists bool
+	isExists := `SELECT EXISTS (SELECT 1 FROM models WHERE id=$1)`
+	c.DB.Raw(isExists, id).Scan(&exists)
+	if !exists {
+		return response.Model{}, fmt.Errorf("there is no such model to update")
+	}
+
+	var updatedModel response.Model
+	query := `UPDATE models SET 
+	brand_id=$1,
+	model_name=$13, -- Corrected placeholder
+	sku=$2,
+	qty_in_stock=$3,
+	image=$4,
+	color=$5,
+	ram=$6,
+	battery=$7,
+	screen_size=$8,
+	storage=$9,
+	camera=$10,
+	price=$11,
+	updated_at=NOW()
+	WHERE id=$12
+	RETURNING
+		id,
+		model_name,
+		brand_id,
+		sku,
+		qty_in_stock,
+		color,
+		ram,
+		battery,
+		screen_size,
+		storage,
+		camera,
+		price,
+		image`
+
+	err := c.DB.Raw(query,
+		model.Brand_id,
 		model.Sku,
 		model.Qty,
 		model.Image,
@@ -210,6 +272,75 @@ func (c *ProductDatabase) AddModel(model helper.Model) (response.Model, error) {
 		model.Screen_size,
 		model.Storage,
 		model.Camera,
-		model.Price).Scan(&newModel).Error
-	return newModel, err
+		model.Price,
+		id,
+		model.Model_name).Scan(&updatedModel).Error
+
+	return updatedModel, err
+}
+
+// -------------------------- Delete-Model --------------------------//
+
+func (c *ProductDatabase) DeleteModel(id int) error {
+	var exists bool
+	isExists := `SELECT EXISTS (SELECT 1 FROM models WHERE id=$1)`
+	c.DB.Raw(isExists, id).Scan(&exists)
+	if !exists {
+		return fmt.Errorf("there is no such model to delete")
+	}
+	query := `DELETE FROM models WHERE id=?`
+	err := c.DB.Exec(query, id).Error
+	return err
+}
+
+// -------------------------- List-All-Model --------------------------//
+
+func (c *ProductDatabase) ListAllModel() ([]response.Model, error) {
+	var models []response.Model
+	getProductItemDetails := `SELECT p.brand_name,
+		p.description,
+		c.category_name, 
+		pi.*
+		FROM brands p 
+		JOIN categories c ON p.category_id=c.id 
+		JOIN models pi ON p.id=pi.brand_id`
+
+	err := c.DB.Raw(getProductItemDetails).Scan(&models).Error
+	return models, err
+}
+
+// -------------------------- List-Single-Model --------------------------//
+
+func (c *ProductDatabase) ListModel(id int) (response.Model, error) {
+	var productItem response.Model
+	query := `SELECT p.brand_name,
+	p.description,
+	p.brand_name,
+	c.category_name, 
+	pi.*
+	FROM brands p 
+	JOIN categories c ON p.category_id=c.id 
+	JOIN models pi ON p.id=pi.brand_id 
+	WHERE pi.id=$1`
+	err := c.DB.Raw(query, id).Scan(&productItem).Error
+	if err != nil {
+		return response.Model{}, err
+	}
+	if productItem.Id == 0 {
+		return response.Model{}, fmt.Errorf("there is no such product item")
+	}
+	getImages := `SELECT file_name FROM images WHERE model_id=$1`
+	err = c.DB.Raw(getImages, id).Scan(&productItem.Image).Error
+	if err != nil {
+		return response.Model{}, err
+	}
+	return productItem, nil
+}
+
+// -------------------------- Uploaded-Model --------------------------//
+
+func (c *ProductDatabase) UploadImage(filepath string, productId int) error {
+	uploadImage := `INSERT INTO images (model_id,file_name)VALUES($1,$2)`
+	err := c.DB.Exec(uploadImage, productId, filepath).Error
+	return err
 }

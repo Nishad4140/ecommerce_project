@@ -11,7 +11,8 @@ type Brand struct {
 }
 
 type Model struct {
-	Brand_id    uint    `json:"productid"`
+	Brand_id    uint    `json:"brandid"`
+	Model_name  string  `json:"modelname"`
 	Sku         string  `json:"sku"`
 	Qty         int     `json:"quantity"`
 	Color       string  `json:"colour"`

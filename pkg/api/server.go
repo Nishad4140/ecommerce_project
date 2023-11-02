@@ -17,7 +17,11 @@ type ServerHTTP struct {
 func NewServerHTTP(
 	userHandler *handler.UserHandler,
 	adminHandler *handler.AdminHandler,
-	productHandler *handler.ProductHandler) *ServerHTTP {
+	productHandler *handler.ProductHandler,
+	cartHandler *handler.CartHandler,
+	supadminHandler *handler.SupAdminHandler,
+	orderHandler *handler.OrderHandler,
+	paymentHandler *handler.PaymentHandler) *ServerHTTP {
 
 	engine := gin.Default()
 
@@ -30,14 +34,14 @@ func NewServerHTTP(
 
 		products := user.Group("/products")
 		{
-			// products.GET("listallproductItems", productHandler.DisaplyaAllProductItems)
-			// products.GET("disaplyproductItem/:id", productHandler.DisaplyProductItem)
+			products.GET("/listallmodels", productHandler.ListAllModel)
+			products.GET("/listmodel/:id", productHandler.ListModel)
 
-			products.GET("/listallproduct", productHandler.ListAllProduct)
-			products.GET("/showproduct/:id", productHandler.ListProduct)
+			products.GET("/listallbrands", productHandler.ListAllProduct)
+			products.GET("/listbrand/:id", productHandler.ListProduct)
 
 			products.GET("/listallcategories", productHandler.ListAllCategories)
-			products.GET("/showcategories/:id", productHandler.ListCategory)
+			products.GET("/listcategories/:id", productHandler.ListCategory)
 		}
 
 		user.Use(middleware.UserAuth)
@@ -56,6 +60,23 @@ func NewServerHTTP(
 				address.POST("/add", userHandler.AddAddress)
 				address.PATCH("/update/:addressId", userHandler.UpdateAddress)
 			}
+
+			cart := user.Group("/cart")
+			{
+				cart.POST("/add/:model_id", cartHandler.AddToCart)
+				cart.PATCH("/remove/:model_id", cartHandler.RemoveFromCart)
+				cart.GET("/list", cartHandler.ListCart)
+			}
+
+			order := user.Group("/order")
+			{
+				order.POST("/orderall/:payment_id", orderHandler.OrderAll)
+				order.PATCH("/cancel/:orderId", orderHandler.UserCancelOrder)
+				order.GET("/view/:orderId", orderHandler.ListOrder)
+				order.GET("/listall", orderHandler.ListAllOrders)
+				order.PATCH("/return/:orderId", orderHandler.ReturnOrder)
+			}
+
 		}
 
 	}
@@ -89,26 +110,51 @@ func NewServerHTTP(
 				category.GET("/list/:id", productHandler.ListCategory)
 			}
 
-			product := admin.Group("/product")
+			brand := admin.Group("/brand")
 			{
-				product.POST("/create", productHandler.AddProduct)
-				product.PATCH("/update/:id", productHandler.UpdateProduct)
-				product.DELETE("/delete/:id", productHandler.DeleteProduct)
-				product.GET("/listall", productHandler.ListAllProduct)
-				product.GET("/list/:id", productHandler.ListProduct)
+				brand.POST("/create", productHandler.AddProduct)
+				brand.PATCH("/update/:id", productHandler.UpdateProduct)
+				brand.DELETE("/delete/:id", productHandler.DeleteProduct)
+				brand.GET("/listall", productHandler.ListAllProduct)
+				brand.GET("/list/:id", productHandler.ListProduct)
 			}
 
-			model := admin.Group("/product-item")
+			model := admin.Group("/model")
 			{
-				model.POST("add", productHandler.AddModel)
-				// model.PATCH("update/:id", productHandler.UpdateProductItem)
-				// model.DELETE("delete/:id", productHandler.DeleteProductItem)
-				// model.GET("listall", productHandler.DisaplyaAllProductItems)
-				// model.GET("show/:id", productHandler.DisaplyProductItem)
-				// model.POST("uploadimage/:id", productHandler.UploadImage)
+				model.POST("/add", productHandler.AddModel)
+				model.PATCH("/update/:id", productHandler.UpdateModel)
+				model.DELETE("/delete/:id", productHandler.DeleteModel)
+				model.GET("/listall", productHandler.ListAllModel)
+				model.GET("/list/:id", productHandler.ListModel)
+				model.POST("/uploadimage/:id", productHandler.UploadImage)
 			}
+
+			order := admin.Group("/order")
+			{
+				order.PATCH("/update", orderHandler.UpdateOrder)
+			}
+
+			//Payment
+			user.GET("order/razorpay/:orderId", paymentHandler.CreateRazorpayPayment)
 		}
 
+	}
+
+	supadmin := engine.Group("/supadmin")
+	{
+		supadmin.POST("/login", supadminHandler.SupAdminLogin)
+
+		admin.Use(middleware.SupAdminAuth)
+		{
+			supadmin.POST("/logout", supadminHandler.SupAdminLogout)
+
+			supAdminUsers := supadmin.Group("/user")
+			{
+				supAdminUsers.PATCH("/block", supadminHandler.BlockUser)
+				supAdminUsers.PATCH("/unblock/:user_id", supadminHandler.UnblockUser)
+			}
+
+		}
 	}
 
 	return &ServerHTTP{engine: engine}

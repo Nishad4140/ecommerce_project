@@ -19,4 +19,9 @@ type ProductRepository interface {
 	ListProduct(id int) (response.Brand, error)
 
 	AddModel(model helper.Model) (response.Model, error)
+	UpdateModel(id int, productItem helper.Model) (response.Model, error)
+	DeleteModel(id int) error
+	ListAllModel() ([]response.Model, error)
+	ListModel(id int) (response.Model, error)
+	UploadImage(filepath string, productId int) error
 }

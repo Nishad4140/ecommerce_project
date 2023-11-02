@@ -2,6 +2,7 @@ package controller
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/Nishad4140/ecommerce_project/pkg/config"
 	"github.com/twilio/twilio-go"
@@ -24,7 +25,7 @@ func SendOTP(phno string) error {
 	return nil
 }
 
-func VerifyOTP(otp, phno string) error {
+func VerifyOTP(otp, phno string) (*openapi.VerifyV2VerificationCheck, error) {
 	var cfg config.Config
 
 	var client *twilio.RestClient = twilio.NewRestClientWithParams(twilio.ClientParams{
@@ -33,12 +34,8 @@ func VerifyOTP(otp, phno string) error {
 	})
 	params := &openapi.CreateVerificationCheckParams{}
 	params.SetTo("+91 " + phno)
+	fmt.Println(otp)
 	params.SetCode(otp)
 	resp, err := client.VerifyV2.CreateVerificationCheck(cfg.TWILIOSERVICESID, params)
-	if err != nil {
-		return errors.New("not vrified")
-	} else if *resp.Status != "approved" {
-		return errors.New("not vrified")
-	}
-	return nil
+	return resp, err
 }

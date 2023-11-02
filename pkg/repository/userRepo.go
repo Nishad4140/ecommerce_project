@@ -39,7 +39,7 @@ func (c *userDatabase) UserLogin(email string) (domain.Users, error) {
 func (c *userDatabase) ViewProfile(userID int) (response.UserData, error) {
 	var userData response.UserData
 	findProfile := `SELECT name,email,mobile FROM users WHERE id=?`
-	err := c.DB.Raw(findProfile, userData).Scan(&userData).Error
+	err := c.DB.Raw(findProfile, userID).Scan(&userData).Error
 	return userData, err
 }
 

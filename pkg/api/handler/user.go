@@ -7,17 +7,20 @@ import (
 	handlerutil "github.com/Nishad4140/ecommerce_project/pkg/api/handlerUtil"
 	helper "github.com/Nishad4140/ecommerce_project/pkg/common/helperStruct"
 	"github.com/Nishad4140/ecommerce_project/pkg/common/response"
+	"github.com/Nishad4140/ecommerce_project/pkg/usecase/controller"
 	services "github.com/Nishad4140/ecommerce_project/pkg/usecase/interface"
 	"github.com/gin-gonic/gin"
 )
 
 type UserHandler struct {
 	userUseCase services.UserUseCase
+	cartUseCase services.CartUsecase
 }
 
-func NewUserHandler(usecase services.UserUseCase) *UserHandler {
+func NewUserHandler(usecase services.UserUseCase, cartUseCase services.CartUsecase) *UserHandler {
 	return &UserHandler{
 		userUseCase: usecase,
+		cartUseCase: cartUseCase,
 	}
 }
 
@@ -36,6 +39,37 @@ func (cr *UserHandler) UserSignUp(c *gin.Context) {
 		})
 		return
 	}
+
+	if user.OTP == "" {
+		controller.SendOTP(user.Mobile)
+		c.JSON(http.StatusOK, response.Response{
+			StatusCode: 200,
+			Message:    "OTP send successfully, Please enter the otp",
+			Data:       nil,
+			Errors:     nil,
+		})
+		return
+	} else {
+		resp, err := controller.VerifyOTP(user.OTP, user.Mobile)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, response.Response{
+				StatusCode: 400,
+				Message:    "can't bind",
+				Data:       nil,
+				Errors:     err.Error(),
+			})
+			return
+		} else if *resp.Status != "approved" {
+			c.JSON(http.StatusBadRequest, response.Response{
+				StatusCode: 400,
+				Message:    "incorect",
+				Data:       nil,
+				Errors:     "incorect",
+			})
+			return
+		}
+	}
+
 	userData, err := cr.userUseCase.UserSignUp(user)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, response.Response{
@@ -46,6 +80,19 @@ func (cr *UserHandler) UserSignUp(c *gin.Context) {
 		})
 		return
 	}
+
+	err = cr.cartUseCase.CreateCart(userData.Id)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Response{
+			StatusCode: 400,
+			Message:    "unable create cart",
+			Data:       nil,
+			Errors:     err.Error(),
+		})
+		return
+	}
+
 	c.JSON(http.StatusCreated, response.Response{
 		StatusCode: 201,
 		Message:    "user signup Successfully",

@@ -251,7 +251,7 @@ func (cr *ProductHandler) UpdateProduct(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, response.Response{
 			StatusCode: 400,
-			Message:    "Cant update product",
+			Message:    "Cant update brand",
 			Data:       nil,
 			Errors:     err.Error(),
 		})
@@ -259,8 +259,8 @@ func (cr *ProductHandler) UpdateProduct(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusBadRequest, response.Response{
-		StatusCode: 400,
-		Message:    "Cant find id",
+		StatusCode: 200,
+		Message:    "Brand updated",
 		Data:       updatedProduct,
 		Errors:     nil,
 	})
@@ -387,4 +387,178 @@ func (cr *ProductHandler) AddModel(c *gin.Context) {
 		Data:       newModel,
 		Errors:     nil,
 	})
+}
+
+// -------------------------- Update-Model --------------------------//
+
+func (cr *ProductHandler) UpdateModel(c *gin.Context) {
+	var model helper.Model
+	err := c.Bind(&model)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Response{
+			StatusCode: 400,
+			Message:    "Cant bind",
+			Data:       nil,
+			Errors:     err.Error(),
+		})
+		return
+	}
+
+	paramsId := c.Param("id")
+	id, err := strconv.Atoi(paramsId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Response{
+			StatusCode: 400,
+			Message:    "can't find id",
+			Data:       nil,
+			Errors:     err.Error(),
+		})
+		return
+	}
+
+	updatedItem, err := cr.productUsecase.UpdateModel(id, model)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Response{
+			StatusCode: 400,
+			Message:    "can't update productitem",
+			Data:       nil,
+			Errors:     err.Error(),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, response.Response{
+		StatusCode: 200,
+		Message:    "productitem updated",
+		Data:       updatedItem,
+		Errors:     nil,
+	})
+}
+
+// -------------------------- Delete-Model --------------------------//
+
+func (cr *ProductHandler) DeleteModel(c *gin.Context) {
+	paramsId := c.Param("id")
+	id, err := strconv.Atoi(paramsId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Response{
+			StatusCode: 400,
+			Message:    "can't find id",
+			Data:       nil,
+			Errors:     err.Error(),
+		})
+		return
+	}
+	err = cr.productUsecase.DeleteModel(id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Response{
+			StatusCode: 400,
+			Message:    "can't delete item",
+			Data:       nil,
+			Errors:     err.Error(),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, response.Response{
+		StatusCode: 200,
+		Message:    "item deleted",
+		Data:       nil,
+		Errors:     nil,
+	})
+}
+
+// -------------------------- List-All-Model --------------------------//
+
+func (cr *ProductHandler) ListAllModel(c *gin.Context) {
+
+	productItems, err := cr.productUsecase.ListAllModel()
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Response{
+			StatusCode: 400,
+			Message:    "can't disaply items",
+			Data:       nil,
+			Errors:     err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, response.Response{
+		StatusCode: 200,
+		Message:    "product items are",
+		Data:       productItems,
+		Errors:     nil,
+	})
+}
+
+// -------------------------- List-Single-Model --------------------------//
+
+func (cr *ProductHandler) ListModel(c *gin.Context) {
+	paramsId := c.Param("id")
+	id, err := strconv.Atoi(paramsId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Response{
+			StatusCode: 400,
+			Message:    "can't find id",
+			Data:       nil,
+			Errors:     err.Error(),
+		})
+		return
+	}
+	productItem, err := cr.productUsecase.ListModel(id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Response{
+			StatusCode: 400,
+			Message:    "can't find product",
+			Data:       nil,
+			Errors:     err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, response.Response{
+		StatusCode: 200,
+		Message:    "product",
+		Data:       productItem,
+		Errors:     nil,
+	})
+
+}
+
+// -------------------------- Upload-Image --------------------------//
+
+func (cr *ProductHandler) UploadImage(c *gin.Context) {
+
+	id := c.Param("id")
+	productId, err := strconv.Atoi(id)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Response{
+			StatusCode: 400,
+			Message:    "cant find product id",
+			Data:       nil,
+			Errors:     err.Error(),
+		})
+		return
+	}
+
+	// Multipart form
+	form, _ := c.MultipartForm()
+
+	files := form.File["images"]
+
+	for _, file := range files {
+		// Upload the file to specific dst.
+		c.SaveUploadedFile(file, "asset/uploads/"+file.Filename)
+
+		err := cr.productUsecase.UploadImage(file.Filename, productId)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, response.Response{
+				StatusCode: 400,
+				Message:    "cant upload images",
+				Data:       nil,
+				Errors:     err.Error(),
+			})
+			return
+		}
+	}
 }

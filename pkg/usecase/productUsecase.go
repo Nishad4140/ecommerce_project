@@ -93,3 +93,38 @@ func (c *ProductUsecase) AddModel(model helper.Model) (response.Model, error) {
 	newModel, err := c.productRepo.AddModel(model)
 	return newModel, err
 }
+
+// -------------------------- Update-Model --------------------------//
+
+func (c *ProductUsecase) UpdateModel(id int, model helper.Model) (response.Model, error) {
+	updatedItem, err := c.productRepo.UpdateModel(id, model)
+	return updatedItem, err
+}
+
+// -------------------------- Delete-Model --------------------------//
+
+func (c *ProductUsecase) DeleteModel(id int) error {
+	err := c.productRepo.DeleteModel(id)
+	return err
+}
+
+// -------------------------- List-All-Model --------------------------//
+
+func (c *ProductUsecase) ListAllModel() ([]response.Model, error) {
+	productItems, err := c.productRepo.ListAllModel()
+	return productItems, err
+}
+
+// -------------------------- List-Single-Model --------------------------//
+
+func (c *ProductUsecase) ListModel(id int) (response.Model, error) {
+	productItem, err := c.productRepo.ListModel(id)
+	return productItem, err
+}
+
+// -------------------------- Upload-Image --------------------------//
+
+func (c *ProductUsecase) UploadImage(filepath string, productId int) error {
+	err := c.productRepo.UploadImage(filepath, productId)
+	return err
+}
