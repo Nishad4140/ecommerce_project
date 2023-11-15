@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -470,7 +471,16 @@ func (cr *ProductHandler) DeleteModel(c *gin.Context) {
 
 func (cr *ProductHandler) ListAllModel(c *gin.Context) {
 
-	productItems, err := cr.productUsecase.ListAllModel()
+	var viewProductaItem helper.QueryParams
+
+	viewProductaItem.Page, _ = strconv.Atoi(c.Query("page"))
+	viewProductaItem.Limit, _ = strconv.Atoi(c.Query("limit"))
+	viewProductaItem.Query = c.Query("query")
+	viewProductaItem.Filter = c.Query("filter")
+	viewProductaItem.SortBy = c.Query("sort_by")
+	viewProductaItem.SortDesc, _ = strconv.ParseBool(c.Query("sort_desc"))
+
+	productItems, err := cr.productUsecase.ListAllModel(viewProductaItem)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, response.Response{
@@ -547,9 +557,10 @@ func (cr *ProductHandler) UploadImage(c *gin.Context) {
 	files := form.File["images"]
 
 	for _, file := range files {
+		fmt.Println("before")
 		// Upload the file to specific dst.
-		c.SaveUploadedFile(file, "asset/uploads/"+file.Filename)
-
+		c.SaveUploadedFile(file, "../../asset/uploads"+file.Filename)
+		fmt.Println("after")
 		err := cr.productUsecase.UploadImage(file.Filename, productId)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, response.Response{

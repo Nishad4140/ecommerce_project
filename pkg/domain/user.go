@@ -28,6 +28,7 @@ type UserBlockInfo struct {
 	Users             Users `gorm:"foreignKey:UsersID"`
 	BlockedAt         time.Time
 	BlockedBy         uint
+	BlockUntil        time.Time
 	ReasonForBlocking string
 }
 
@@ -42,4 +43,12 @@ type Address struct {
 	Landmark     string `json:"landmark" binding:"required"`
 	Pincode      int    `json:"pincode " binding:"required"`
 	IsDefault    bool   `gorm:"default:false"`
+}
+
+type UserWallet struct {
+	Id      uint `gorm:"primaryKey"`
+	UsersId uint
+	Users   Users `gorm:"foreignKey:UsersId"`
+	Amount  int   `gorm:"default:0;check:Amount>=0" sql:"CHECK(Amount >= 0)"`
+	IsLock  bool  `gorm:"default:true"`
 }

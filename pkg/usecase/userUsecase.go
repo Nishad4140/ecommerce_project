@@ -67,6 +67,24 @@ func (c *userUseCase) UserLogin(user helper.LoginReq) (string, error) {
 	return token, nil
 }
 
+//-------------------------- Forgot-Password --------------------------//
+
+func (c *userUseCase) ForgotPassword(forgotPass helper.ForgotPassword) error {
+	UserData, err := c.userRepo.UserDetails(forgotPass.Email)
+	if err != nil {
+		return fmt.Errorf("there is no such user")
+	}
+	hash, err := bcrypt.GenerateFromPassword([]byte(forgotPass.NewPassword), 10)
+	if err != nil {
+		return fmt.Errorf("error in hashing the password")
+	}
+	forgotPass.NewPassword = string(hash)
+	if err = c.userRepo.UpdatePassword(UserData.Id, forgotPass.NewPassword); err != nil {
+		return err
+	}
+	return nil
+}
+
 //-------------------------- View-Profile --------------------------//
 
 func (c *userUseCase) ViewProfile(userID int) (response.UserData, error) {
@@ -116,5 +134,17 @@ func (c *userUseCase) AddAddress(userID int, address helper.Address) error {
 
 func (c *userUseCase) UpdateAddress(id, addressId int, address helper.Address) error {
 	err := c.userRepo.UpdateAddress(id, addressId, address)
+	return err
+}
+
+//-------------------------- Create-Wallet --------------------------//
+
+func (c *userUseCase) CreateWallet(id int) error {
+	err := c.userRepo.CreateWallet(id)
+	return err
+}
+
+func (c *userUseCase) VerifyWallet(id int) error {
+	err := c.userRepo.VerifyWallet(id)
 	return err
 }

@@ -207,14 +207,32 @@ func (c *OrderDatabase) ListAllOrders(userId int) ([]domain.Orders, error) {
 
 func (c *OrderDatabase) ReturnOrder(userId, orderId int) (int, error) {
 	var orders domain.Orders
+	var userWallet domain.UserWallet
+
+	wallet := `SELECT * FROM user_wallets WHERE users_id=$1`
+	err := c.DB.Raw(wallet, userId).Scan(&userWallet).Error
+	if err != nil {
+		return 0, err
+	}
+	if userWallet.IsLock {
+		return 0, fmt.Errorf("verify your wallet")
+	}
+
 	getOrderDetails := `SELECT * FROM orders WHERE user_id=$1 AND id=$2`
-	err := c.DB.Raw(getOrderDetails, userId, orderId).Scan(&orders).Error
+	err = c.DB.Raw(getOrderDetails, userId, orderId).Scan(&orders).Error
 	if err != nil {
 		return 0, err
 	}
 	if orders.OrderStatusID != 3 {
 		return 0, fmt.Errorf("the order is not deleverd")
 	}
+
+	updateWallet := `UPDATE user_wallets SET amount=amount + ? WHERE users_id=?`
+	err = c.DB.Exec(updateWallet, orders.OrderTotal, userId).Error
+	if err != nil {
+		return 0, err
+	}
+
 	returnOder := `UPDATE orders SET order_status_id=$1 WHERE id=$2`
 	err = c.DB.Exec(returnOder, 6, orderId).Error
 	if err != nil {

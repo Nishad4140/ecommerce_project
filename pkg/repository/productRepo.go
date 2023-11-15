@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	"strings"
 
 	helper "github.com/Nishad4140/ecommerce_project/pkg/common/helperStruct"
 	"github.com/Nishad4140/ecommerce_project/pkg/common/response"
@@ -217,7 +218,20 @@ func (c *ProductDatabase) AddModel(model helper.Model) (response.Model, error) {
 		model.Camera,
 		model.Price,
 		model.Image).Scan(&newModel).Error
+	if err != nil {
+		return newModel, err
+	}
+	selectQuery := `SELECT p.brand_name,
+		p.description,
+		c.category_name, 
+		pi.*
+		FROM brands p 
+		JOIN categories c ON p.category_id=c.id 
+		JOIN models pi ON p.id=pi.brand_id 
+		WHERE pi.id=$1`
+	err = c.DB.Raw(selectQuery, newModel.Id).Scan(&newModel).Error
 	return newModel, err
+
 }
 
 // -------------------------- Update-Model --------------------------//
@@ -295,7 +309,7 @@ func (c *ProductDatabase) DeleteModel(id int) error {
 
 // -------------------------- List-All-Model --------------------------//
 
-func (c *ProductDatabase) ListAllModel() ([]response.Model, error) {
+func (c *ProductDatabase) ListAllModel(queryParams helper.QueryParams) ([]response.Model, error) {
 	var models []response.Model
 	getProductItemDetails := `SELECT p.brand_name,
 		p.description,
@@ -303,7 +317,28 @@ func (c *ProductDatabase) ListAllModel() ([]response.Model, error) {
 		pi.*
 		FROM brands p 
 		JOIN categories c ON p.category_id=c.id 
-		JOIN models pi ON p.id=pi.brand_id`
+		JOIN models pi ON pi.brand_id=p.id`
+
+	if queryParams.Query != "" && queryParams.Filter != "" {
+		getProductItemDetails = fmt.Sprintf("%s WHERE LOWER(%s) LIKE '%%%s%%'", getProductItemDetails, queryParams.Filter, strings.ToLower(queryParams.Query))
+	}
+
+	if queryParams.SortBy != "" {
+		if queryParams.SortDesc {
+			getProductItemDetails = fmt.Sprintf("%s ORDER BY %s DESC", getProductItemDetails, queryParams.SortBy)
+		} else {
+			getProductItemDetails = fmt.Sprintf("%s ORDER BY %s ASC", getProductItemDetails, queryParams.SortBy)
+		}
+	} else {
+		getProductItemDetails = fmt.Sprintf("%s ORDER BY p.created_at DESC", getProductItemDetails)
+	}
+	//to set the page number and the qty that need to display in a single responce
+	if queryParams.Limit != 0 && queryParams.Page != 0 {
+		getProductItemDetails = fmt.Sprintf("%s LIMIT %d OFFSET %d", getProductItemDetails, queryParams.Limit, (queryParams.Page-1)*queryParams.Limit)
+	}
+	if queryParams.Limit == 0 || queryParams.Page == 0 {
+		getProductItemDetails = fmt.Sprintf("%s LIMIT 10 OFFSET 0", getProductItemDetails)
+	}
 
 	err := c.DB.Raw(getProductItemDetails).Scan(&models).Error
 	return models, err

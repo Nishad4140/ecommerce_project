@@ -11,5 +11,6 @@ type AdminRepository interface {
 	ReportUser(reason helper.ReportData, adminId int) error
 	ShowUser(userID int) (response.UserDetails, error)
 	ShowAllUser() ([]response.UserDetails, error)
-	// CreateSeller(seller helper.CreateSeller, createrId int) (response.SellerData, error)
+	GetDashBoard(reports helper.ReportParams) (response.DashBoard, error)
+	ViewSalesReport(reports helper.ReportParams) ([]response.SalesReport, error)
 }

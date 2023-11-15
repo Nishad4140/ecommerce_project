@@ -20,7 +20,7 @@ func NewUserRepository(DB *gorm.DB) interfaces.UserRepository {
 
 func (c *userDatabase) UserSignUp(user helper.UserReq) (response.UserData, error) {
 	var userData response.UserData
-	insertQuery := `INSERT INTO users (name,email,mobile,password)VALUES($1,$2,$3,$4) 
+	insertQuery := `INSERT INTO users (name,email,mobile,password,created_at)VALUES($1,$2,$3,$4,NOW()) 
 					RETURNING id,name,email,mobile`
 	err := c.DB.Raw(insertQuery, user.Name, user.Email, user.Mobile, user.Password).Scan(&userData).Error
 	return userData, err
@@ -32,6 +32,15 @@ func (c *userDatabase) UserLogin(email string) (domain.Users, error) {
 	var userData domain.Users
 	err := c.DB.Raw("SELECT * FROM users WHERE email=?", email).Scan(&userData).Error
 	return userData, err
+}
+
+//-------------------------- User-Details --------------------------//
+
+func (c *userDatabase) UserDetails(email string) (response.UserData, error) {
+	var userData response.UserData
+	err := c.DB.Raw("SELECT id,name,email,mobile FROM user WHERE email=?", email).Scan(&userData).Error
+	return userData, err
+
 }
 
 // -------------------------- View-Profile --------------------------//
@@ -119,5 +128,19 @@ func (c *userDatabase) UpdateAddress(id, addressId int, address helper.Address) 
 		address.IsDefault,
 		id,
 		addressId).Error
+	return err
+}
+
+//-------------------------- Create-Wallet --------------------------//
+
+func (c *userDatabase) CreateWallet(id int) error {
+	query := `INSERT INTO user_wallets (users_id, amount) VALUES($1,0)`
+	err := c.DB.Exec(query, id).Error
+	return err
+}
+
+func (c *userDatabase) VerifyWallet(id int) error {
+	query := `UPDATE user_wallets SET is_lock= $1 WHERE users_id=$2`
+	err := c.DB.Exec(query, false, id).Error
 	return err
 }

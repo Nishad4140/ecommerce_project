@@ -47,7 +47,7 @@ func (c *supadminDatabase) BlockUser(body helper.BlockData, adminId int) error {
 		return err
 	}
 	// Execute the second SQL command (INSERT)
-	if err := tx.Exec("INSERT INTO user_infos (users_id, reason_for_blocking, blocked_at, blocked_by) VALUES (?, ?, NOW(), ?)", body.UserId, body.Reason, adminId).Error; err != nil {
+	if err := tx.Exec("INSERT INTO user_block_infos (users_id, reason_for_blocking, blocked_at, blocked_by,block_until) VALUES (?, ?, NOW(), ?, NOW() + INTERVAL '5 Minutes')", body.UserId, body.Reason, adminId).Error; err != nil {
 		tx.Rollback()
 		return err
 	}

@@ -15,7 +15,7 @@ type Brand struct {
 type Model struct {
 	Id           uint
 	ModelName    string
-	Brand        string
+	BrandName    string
 	Description  string
 	CategoryName string
 	Sku          string

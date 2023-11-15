@@ -3,11 +3,11 @@ package usecase
 import (
 	"fmt"
 
+	helper "github.com/Nishad4140/ecommerce_project/pkg/common/helperStruct"
 	"github.com/Nishad4140/ecommerce_project/pkg/config"
 	"github.com/Nishad4140/ecommerce_project/pkg/domain"
 	interfaces "github.com/Nishad4140/ecommerce_project/pkg/repository/interface"
 	services "github.com/Nishad4140/ecommerce_project/pkg/usecase/interface"
-	"github.com/akshayur04/project-ecommerce/pkg/common/helperStruct"
 	"github.com/razorpay/razorpay-go"
 )
 
@@ -59,7 +59,7 @@ func (c *PaymentUseCase) CreateRazorpayPayment(userId, orderId int) (domain.Orde
 	return order, razorpayID, err
 }
 
-func (c *PaymentUseCase) UpdatePaymentDetails(paymentVerifier helperStruct.PaymentVerification) error {
+func (c *PaymentUseCase) UpdatePaymentDetails(paymentVerifier helper.PaymentVerification) error {
 	paymentDetails, err := c.paymentRepo.ViewPaymentDetails(paymentVerifier.OrderID)
 	if err != nil {
 		return err

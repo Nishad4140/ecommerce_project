@@ -110,8 +110,8 @@ func (c *ProductUsecase) DeleteModel(id int) error {
 
 // -------------------------- List-All-Model --------------------------//
 
-func (c *ProductUsecase) ListAllModel() ([]response.Model, error) {
-	productItems, err := c.productRepo.ListAllModel()
+func (c *ProductUsecase) ListAllModel(viewProductaItem helper.QueryParams) ([]response.Model, error) {
+	productItems, err := c.productRepo.ListAllModel(viewProductaItem)
 	return productItems, err
 }
 

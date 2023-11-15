@@ -1,13 +1,14 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
 	handlerutil "github.com/Nishad4140/ecommerce_project/pkg/api/handlerUtil"
+	"github.com/Nishad4140/ecommerce_project/pkg/api/middleware"
 	helper "github.com/Nishad4140/ecommerce_project/pkg/common/helperStruct"
 	"github.com/Nishad4140/ecommerce_project/pkg/common/response"
-	"github.com/Nishad4140/ecommerce_project/pkg/usecase/controller"
 	services "github.com/Nishad4140/ecommerce_project/pkg/usecase/interface"
 	"github.com/gin-gonic/gin"
 )
@@ -41,7 +42,16 @@ func (cr *UserHandler) UserSignUp(c *gin.Context) {
 	}
 
 	if user.OTP == "" {
-		controller.SendOTP(user.Mobile)
+		err = middleware.SendOTP(user.Email)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, response.Response{
+				StatusCode: 400,
+				Message:    "Error sending otp",
+				Data:       nil,
+				Errors:     err,
+			})
+			return
+		}
 		c.JSON(http.StatusOK, response.Response{
 			StatusCode: 200,
 			Message:    "OTP send successfully, Please enter the otp",
@@ -50,21 +60,13 @@ func (cr *UserHandler) UserSignUp(c *gin.Context) {
 		})
 		return
 	} else {
-		resp, err := controller.VerifyOTP(user.OTP, user.Mobile)
-		if err != nil {
+		res := middleware.VerifyOTP(user.Email, user.OTP)
+		if !res {
 			c.JSON(http.StatusBadRequest, response.Response{
 				StatusCode: 400,
-				Message:    "can't bind",
+				Message:    "OTP is incorrect",
 				Data:       nil,
-				Errors:     err.Error(),
-			})
-			return
-		} else if *resp.Status != "approved" {
-			c.JSON(http.StatusBadRequest, response.Response{
-				StatusCode: 400,
-				Message:    "incorect",
-				Data:       nil,
-				Errors:     "incorect",
+				Errors:     errors.New("OTP is incorrect"),
 			})
 			return
 		}
@@ -87,6 +89,17 @@ func (cr *UserHandler) UserSignUp(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, response.Response{
 			StatusCode: 400,
 			Message:    "unable create cart",
+			Data:       nil,
+			Errors:     err.Error(),
+		})
+		return
+	}
+
+	err = cr.userUseCase.CreateWallet(userData.Id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Response{
+			StatusCode: 400,
+			Message:    "unable to create wallet",
 			Data:       nil,
 			Errors:     err.Error(),
 		})
@@ -127,10 +140,71 @@ func (cr *UserHandler) UserLogin(c *gin.Context) {
 		return
 	}
 	c.SetSameSite(http.SameSiteLaxMode)
-	c.SetCookie("userToken", token, 3600*24*30, "", "", false, true)
+	c.SetCookie("userToken", token, 3600*24*30, "/", "localhost", false, true)
 	c.JSON(http.StatusOK, response.Response{
 		StatusCode: 200,
 		Message:    "login succesfully",
+		Data:       nil,
+		Errors:     nil,
+	})
+
+}
+
+//-------------------------- Forgot-Password --------------------------//
+
+func (cr *UserHandler) ForgotPassword(c *gin.Context) {
+	var newPass helper.ForgotPassword
+	err := c.BindJSON(&newPass)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, response.Response{
+			StatusCode: 422,
+			Message:    "Unable Bind",
+			Data:       nil,
+			Errors:     err.Error(),
+		})
+	}
+
+	if newPass.OTP == "" {
+		if err := middleware.SendOTP(newPass.Email); err != nil {
+			c.JSON(http.StatusBadRequest, response.Response{
+				StatusCode: 400,
+				Message:    "error in sending the otp",
+				Data:       nil,
+				Errors:     err,
+			})
+			return
+		}
+		c.JSON(http.StatusOK, response.Response{
+			StatusCode: 200,
+			Message:    "otp send successfully",
+			Data:       nil,
+			Errors:     nil,
+		})
+		return
+	} else {
+		res := middleware.VerifyOTP(newPass.Email, newPass.OTP)
+		if !res {
+			c.JSON(http.StatusBadRequest, response.Response{
+				StatusCode: 400,
+				Message:    "OTP is incorrect",
+				Data:       nil,
+				Errors:     errors.New("OTP is incorrect"),
+			})
+			return
+		}
+	}
+	err = cr.userUseCase.ForgotPassword(newPass)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Response{
+			StatusCode: 400,
+			Message:    "unable to update the password",
+			Data:       nil,
+			Errors:     err,
+		})
+	}
+	c.JSON(http.StatusOK, response.Response{
+		StatusCode: 200,
+		Message:    "password updated successfully",
 		Data:       nil,
 		Errors:     nil,
 	})
@@ -356,6 +430,77 @@ func (cr *UserHandler) UpdateAddress(c *gin.Context) {
 	c.JSON(http.StatusOK, response.Response{
 		StatusCode: 200,
 		Message:    "address updated",
+		Data:       nil,
+		Errors:     nil,
+	})
+}
+
+//-------------------------- User-Wallet --------------------------//
+
+func (cr *UserHandler) VerifyWallet(c *gin.Context) {
+	userId, err := handlerutil.GetUserIdFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Response{
+			StatusCode: 400,
+			Message:    "Can't find UserId",
+			Data:       nil,
+			Errors:     err.Error(),
+		})
+		return
+	}
+	var wallet helper.VerifyWallet
+	err = c.BindJSON(&wallet)
+
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, response.Response{
+			StatusCode: 422,
+			Message:    "Unable Bind",
+			Data:       nil,
+			Errors:     err.Error(),
+		})
+	}
+
+	if wallet.OTP == "" {
+		if err := middleware.SendOTP(wallet.Email); err != nil {
+			c.JSON(http.StatusBadRequest, response.Response{
+				StatusCode: 400,
+				Message:    "error in sending the otp",
+				Data:       nil,
+				Errors:     err,
+			})
+			return
+		}
+		c.JSON(http.StatusOK, response.Response{
+			StatusCode: 200,
+			Message:    "otp send successfully",
+			Data:       nil,
+			Errors:     nil,
+		})
+		return
+	} else {
+		res := middleware.VerifyOTP(wallet.Email, wallet.OTP)
+		if !res {
+			c.JSON(http.StatusBadRequest, response.Response{
+				StatusCode: 400,
+				Message:    "OTP is incorrect",
+				Data:       nil,
+				Errors:     errors.New("OTP is incorrect"),
+			})
+			return
+		}
+	}
+	err = cr.userUseCase.VerifyWallet(userId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Response{
+			StatusCode: 400,
+			Message:    "unable to verify",
+			Data:       nil,
+			Errors:     err,
+		})
+	}
+	c.JSON(http.StatusOK, response.Response{
+		StatusCode: 200,
+		Message:    "wallet verified successfully",
 		Data:       nil,
 		Errors:     nil,
 	})

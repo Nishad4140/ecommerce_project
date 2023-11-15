@@ -8,6 +8,12 @@ type UserReq struct {
 	OTP      string `json:"otp"`
 }
 
+type ForgotPassword struct {
+	Email       string `json:"email" binding:"required"`
+	NewPassword string `json:"newpassword" binding:"required"`
+	OTP         string `json:"otp"`
+}
+
 type LoginReq struct {
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password"`
@@ -26,4 +32,9 @@ type Address struct {
 	Landmark     string `json:"landmark" `
 	Pincode      int    `json:"pincode" `
 	IsDefault    bool   `json:"isdefault" `
+}
+
+type VerifyWallet struct{
+	Email       string `json:"email" binding:"required"`
+	OTP         string `json:"otp"`
 }

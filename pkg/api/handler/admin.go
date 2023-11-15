@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/csv"
 	"net/http"
 	"strconv"
 
@@ -46,7 +47,7 @@ func (cr *AdminHandler) AdminLogin(c *gin.Context) {
 		return
 	}
 	c.SetSameSite(http.SameSiteLaxMode)
-	c.SetCookie("adminToken", token, 3600*24*30, "", "", false, true)
+	c.SetCookie("adminToken", token, 3600*24*30, "/", "localhost", false, true)
 	c.JSON(http.StatusOK, response.Response{
 		StatusCode: 200,
 		Message:    "login succesfully",
@@ -166,48 +167,124 @@ func (cr *AdminHandler) ShowAllUsers(c *gin.Context) {
 
 }
 
-// //-------------------------- Create-Seller --------------------------//
+//-------------------------- Dashboard --------------------------//
 
-// func (cr *AdminHandler) CreateSeller(c *gin.Context) {
-// 	var sellerData helper.CreateSeller
-// 	err := c.Bind(&sellerData)
-// 	if err != nil {
-// 		c.JSON(http.StatusBadRequest, response.Response{
-// 			StatusCode: 400,
-// 			Message:    "bind faild",
-// 			Data:       nil,
-// 			Errors:     err.Error(),
-// 		})
-// 		return
-// 	}
-// 	fmt.Println(sellerData)
-// 	createrId, err := handlerutil.GetAdminIdFromContext(c)
-// 	if err != nil {
-// 		c.JSON(http.StatusBadRequest, response.Response{
-// 			StatusCode: 400,
-// 			Message:    "Can't find AdminId",
-// 			Data:       nil,
-// 			Errors:     err.Error(),
-// 		})
-// 		return
-// 	}
+func (cr *AdminHandler) AdminDashBoard(c *gin.Context) {
 
-// 	sellerDetails, err := cr.adminUseCase.CreateSeller(sellerData, createrId)
+	var filterDash helper.ReportParams
 
-// 	if err != nil {
-// 		c.JSON(http.StatusBadRequest, response.Response{
-// 			StatusCode: 400,
-// 			Message:    "Can't Create Seller",
-// 			Data:       nil,
-// 			Errors:     err.Error(),
-// 		})
-// 		return
-// 	}
+	filterDash.Status = c.Query("status")
+	filterDash.Day, _ = strconv.Atoi(c.Query("day"))
+	filterDash.Week, _ = strconv.Atoi(c.Query("week"))
+	filterDash.Month, _ = strconv.Atoi(c.Query("month"))
+	filterDash.Year, _ = strconv.Atoi(c.Query("year"))
+	filterDash.Date1 = c.Query("date1")
+	filterDash.Date2 = c.Query("date2")
 
-// 	c.JSON(http.StatusCreated, response.Response{
-// 		StatusCode: 201,
-// 		Message:    "Seller created",
-// 		Data:       sellerDetails,
-// 		Errors:     nil,
-// 	})
-// }
+	dashBoard, err := cr.adminUseCase.GetDashBoard(filterDash)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Response{
+			StatusCode: 400,
+			Message:    "cant get dashboard",
+			Data:       nil,
+			Errors:     err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, response.Response{
+		StatusCode: 200,
+		Message:    "Dash board",
+		Data:       dashBoard,
+		Errors:     nil,
+	})
+}
+
+func (cr *AdminHandler) ViewSalesReport(c *gin.Context) {
+
+	var filterReport helper.ReportParams
+
+	filterReport.Status = c.Query("status")
+	filterReport.Day, _ = strconv.Atoi(c.Query("day"))
+	filterReport.Week, _ = strconv.Atoi(c.Query("week"))
+	filterReport.Month, _ = strconv.Atoi(c.Query("month"))
+	filterReport.Year, _ = strconv.Atoi(c.Query("year"))
+	filterReport.Date1 = c.Query("date1")
+	filterReport.Date2 = c.Query("date2")
+
+	sales, err := cr.adminUseCase.ViewSalesReport(filterReport)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Response{
+			StatusCode: 400,
+			Message:    "cant get sales report",
+			Data:       nil,
+			Errors:     err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, response.Response{
+		StatusCode: 200,
+		Message:    "Sales report",
+		Data:       sales,
+		Errors:     nil,
+	})
+
+}
+
+func (cr *AdminHandler) DownloadSalesReport(c *gin.Context) {
+
+	var filterReport helper.ReportParams
+
+	filterReport.Status = c.Query("status")
+	filterReport.Day, _ = strconv.Atoi(c.Query("day"))
+	filterReport.Week, _ = strconv.Atoi(c.Query("week"))
+	filterReport.Month, _ = strconv.Atoi(c.Query("month"))
+	filterReport.Year, _ = strconv.Atoi(c.Query("year"))
+	filterReport.Date1 = c.Query("date1")
+	filterReport.Date2 = c.Query("date2")
+
+	sales, err := cr.adminUseCase.ViewSalesReport(filterReport)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Response{
+			StatusCode: 400,
+			Message:    "cant get sales report",
+			Data:       nil,
+			Errors:     err.Error(),
+		})
+		return
+	}
+	// Set headers so browser will download the file
+	c.Header("Content-Type", "text/csv")
+	c.Header("Content-Disposition", "attachment;filename=sales.csv")
+
+	// c.Header("Content-Type", "text/csv")
+	// c.Header("Content-Disposition", "attachment;filename=sales.csv")
+
+	// Create a CSV writer using our response writer as our io.Writer
+	wr := csv.NewWriter(c.Writer)
+
+	// Write CSV header row
+	headers := []string{"Name", "PaymentType", "OrderDate", "OrderTotal"}
+	if err := wr.Write(headers); err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	// Write data rows
+	for _, sale := range sales {
+		row := []string{sale.Name, sale.PaymentType, sale.OrderDate.Format("2006-01-02 15:04:05"), strconv.Itoa(sale.OrderTotal)}
+		if err := wr.Write(row); err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
+	}
+
+	// Flush the writer's buffer to ensure all data is written to the client
+	wr.Flush()
+	if err := wr.Error(); err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+}

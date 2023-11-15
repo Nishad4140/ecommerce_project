@@ -31,6 +31,7 @@ func NewServerHTTP(
 	{
 		user.POST("/signup", userHandler.UserSignUp)
 		user.POST("/login", userHandler.UserLogin)
+		user.POST("/forgotpass", userHandler.ForgotPassword)
 
 		products := user.Group("/products")
 		{
@@ -41,7 +42,7 @@ func NewServerHTTP(
 			products.GET("/listbrand/:id", productHandler.ListProduct)
 
 			products.GET("/listallcategories", productHandler.ListAllCategories)
-			products.GET("/listcategories/:id", productHandler.ListCategory)
+			products.GET("/listcategory/:id", productHandler.ListCategory)
 		}
 
 		user.Use(middleware.UserAuth)
@@ -61,6 +62,11 @@ func NewServerHTTP(
 				address.PATCH("/update/:addressId", userHandler.UpdateAddress)
 			}
 
+			wallet := user.Group("/wallet")
+			{
+				wallet.PATCH("/verify", userHandler.VerifyWallet)
+			}
+
 			cart := user.Group("/cart")
 			{
 				cart.POST("/add/:model_id", cartHandler.AddToCart)
@@ -76,6 +82,10 @@ func NewServerHTTP(
 				order.GET("/listall", orderHandler.ListAllOrders)
 				order.PATCH("/return/:orderId", orderHandler.ReturnOrder)
 			}
+
+			//Payment
+			user.GET("/order/razorpay/:orderId", paymentHandler.CreateRazorpayPayment)
+			user.GET("/payment-handler", paymentHandler.PaymentSuccess)
 
 		}
 
@@ -95,11 +105,6 @@ func NewServerHTTP(
 				adminUsers.GET("/list/:user_id", adminHandler.ShowUser)
 				adminUsers.GET("/listall", adminHandler.ShowAllUsers)
 			}
-
-			// adminSellers := admin.Group("/seller")
-			// {
-			// 	adminSellers.POST("/create", adminHandler.CreateSeller)
-			// }
 
 			category := admin.Group("/category")
 			{
@@ -129,13 +134,23 @@ func NewServerHTTP(
 				model.POST("/uploadimage/:id", productHandler.UploadImage)
 			}
 
+			dashboard := admin.Group("/dashboard")
+			{
+				dashboard.GET("/get", adminHandler.AdminDashBoard)
+			}
+
 			order := admin.Group("/order")
 			{
 				order.PATCH("/update", orderHandler.UpdateOrder)
 			}
 
-			//Payment
-			user.GET("order/razorpay/:orderId", paymentHandler.CreateRazorpayPayment)
+			//Sales report
+			sales := admin.Group("/sales")
+			{
+				sales.GET("/get", adminHandler.ViewSalesReport)
+				sales.GET("/download", adminHandler.DownloadSalesReport)
+			}
+
 		}
 
 	}
@@ -144,7 +159,7 @@ func NewServerHTTP(
 	{
 		supadmin.POST("/login", supadminHandler.SupAdminLogin)
 
-		admin.Use(middleware.SupAdminAuth)
+		supadmin.Use(middleware.SupAdminAuth)
 		{
 			supadmin.POST("/logout", supadminHandler.SupAdminLogout)
 
@@ -161,6 +176,8 @@ func NewServerHTTP(
 }
 
 func (sh *ServerHTTP) Start() {
+
+	sh.engine.LoadHTMLGlob("../../template/*.html")
 
 	sh.engine.Run(":3000")
 }

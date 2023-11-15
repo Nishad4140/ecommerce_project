@@ -10,5 +10,6 @@ type AdminUseCase interface {
 	ReportUser(reason helper.ReportData, adminID int) error
 	ShowUser(userID int) (response.UserDetails, error)
 	ShowAllUser() ([]response.UserDetails, error)
-	// CreateSeller(seller helper.CreateSeller, createrId int) (response.SellerData, error)
+	GetDashBoard(reports helper.ReportParams) (response.DashBoard, error)
+	ViewSalesReport(reports helper.ReportParams) ([]response.SalesReport, error)
 }
