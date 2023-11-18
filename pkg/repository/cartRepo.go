@@ -206,7 +206,7 @@ func (c *CartDatabase) ListCart(userId int) (response.ViewCart, error) {
 	}
 
 	var carts response.ViewCart
-	carts.CartTotal = cart.Total
+	// carts.CartTotal = cart.Total
 	carts.SubTotal = cart.SubTotal
 	carts.CartItems = details
 	if err = tx.Commit().Error; err != nil {

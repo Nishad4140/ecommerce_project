@@ -105,11 +105,20 @@ func (cr *UserHandler) UserSignUp(c *gin.Context) {
 		})
 		return
 	}
+	var details = struct {
+		Name   string
+		Email  string
+		Mobile string
+	}{
+		userData.Name,
+		userData.Email,
+		userData.Mobile,
+	}
 
 	c.JSON(http.StatusCreated, response.Response{
 		StatusCode: 201,
 		Message:    "user signup Successfully",
-		Data:       userData,
+		Data:       details,
 		Errors:     nil,
 	})
 }
@@ -201,6 +210,7 @@ func (cr *UserHandler) ForgotPassword(c *gin.Context) {
 			Data:       nil,
 			Errors:     err,
 		})
+		return
 	}
 	c.JSON(http.StatusOK, response.Response{
 		StatusCode: 200,
@@ -267,7 +277,7 @@ func (cr *UserHandler) EditProfile(c *gin.Context) {
 		})
 		return
 	}
-	var updatingDetails helper.UserReq
+	var updatingDetails helper.UpdateProfile
 	err = c.Bind(&updatingDetails)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, response.Response{
@@ -276,6 +286,7 @@ func (cr *UserHandler) EditProfile(c *gin.Context) {
 			Data:       nil,
 			Errors:     err.Error(),
 		})
+		return
 	}
 	updatedProfile, err := cr.userUseCase.EditProfile(userID, updatingDetails)
 	if err != nil {

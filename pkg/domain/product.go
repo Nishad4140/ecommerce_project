@@ -32,10 +32,10 @@ type Model struct {
 	Screen_size  float64
 	Storage      int
 	Camera       int
-	Price        int //`gorm:"not null;check:price>=0" sql:"CHECK(price >= 0)"`
-	Image      string
-	Created_at time.Time
-	Updated_at time.Time
+	Price        uint //`gorm:"not null;check:price>=0" sql:"CHECK(price >= 0)"`
+	Image        string
+	Created_at   time.Time
+	Updated_at   time.Time
 }
 
 type Images struct {

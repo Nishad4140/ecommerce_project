@@ -2,7 +2,7 @@ package response
 
 type DisplayCart struct {
 	Productname  string
-	Brand        string
+	BrandName    string
 	Color        string
 	Ram          int
 	Battery      int
@@ -16,5 +16,5 @@ type DisplayCart struct {
 type ViewCart struct {
 	CartItems []DisplayCart `json:"cart_items"`
 	SubTotal  float64       `json:"sub_total"`
-	CartTotal float64       `json:"cart_total"`
+	// CartTotal float64       `json:"cart_total"`
 }

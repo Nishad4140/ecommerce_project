@@ -25,24 +25,35 @@ func NewServerHTTP(
 
 	engine := gin.Default()
 
+	engine.GET("/payment-handler", paymentHandler.PaymentSuccess)
+
 	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
 	user := engine.Group("/user")
 	{
 		user.POST("/signup", userHandler.UserSignUp)
 		user.POST("/login", userHandler.UserLogin)
-		user.POST("/forgotpass", userHandler.ForgotPassword)
+		user.PATCH("/forgotpass", userHandler.ForgotPassword)
 
-		products := user.Group("/products")
+		//Payment
+		user.GET("/order/online-payment/:orderId", paymentHandler.CreateRazorpayPayment)
+
+		models := user.Group("/models")
 		{
-			products.GET("/listallmodels", productHandler.ListAllModel)
-			products.GET("/listmodel/:id", productHandler.ListModel)
+			models.GET("/", productHandler.ListAllModel)
+			models.GET("/:id", productHandler.ListModel)
+		}
 
-			products.GET("/listallbrands", productHandler.ListAllProduct)
-			products.GET("/listbrand/:id", productHandler.ListProduct)
+		brands := user.Group("/brands")
+		{
+			brands.GET("/", productHandler.ListAllProduct)
+			brands.GET("/:id", productHandler.ListProduct)
+		}
 
-			products.GET("/listallcategories", productHandler.ListAllCategories)
-			products.GET("/listcategory/:id", productHandler.ListCategory)
+		category := user.Group("/category")
+		{
+			category.GET("/", productHandler.ListAllCategories)
+			category.GET("/:id", productHandler.ListCategory)
 		}
 
 		user.Use(middleware.UserAuth)
@@ -51,7 +62,7 @@ func NewServerHTTP(
 
 			profile := user.Group("/profile")
 			{
-				profile.GET("/view", userHandler.ViewProfile)
+				profile.GET("/", userHandler.ViewProfile)
 				profile.PATCH("/edit", userHandler.EditProfile)
 				profile.PATCH("/updatepassword", userHandler.UpdatePassword)
 			}
@@ -71,21 +82,17 @@ func NewServerHTTP(
 			{
 				cart.POST("/add/:model_id", cartHandler.AddToCart)
 				cart.PATCH("/remove/:model_id", cartHandler.RemoveFromCart)
-				cart.GET("/list", cartHandler.ListCart)
+				cart.GET("/", cartHandler.ListCart)
 			}
 
 			order := user.Group("/order")
 			{
 				order.POST("/orderall/:payment_id", orderHandler.OrderAll)
 				order.PATCH("/cancel/:orderId", orderHandler.UserCancelOrder)
-				order.GET("/view/:orderId", orderHandler.ListOrder)
-				order.GET("/listall", orderHandler.ListAllOrders)
+				order.GET("/:orderId", orderHandler.ListOrder)
+				order.GET("/", orderHandler.ListAllOrders)
 				order.PATCH("/return/:orderId", orderHandler.ReturnOrder)
 			}
-
-			//Payment
-			user.GET("/order/razorpay/:orderId", paymentHandler.CreateRazorpayPayment)
-			user.GET("/payment-handler", paymentHandler.PaymentSuccess)
 
 		}
 
@@ -102,8 +109,8 @@ func NewServerHTTP(
 			adminUsers := admin.Group("/user")
 			{
 				adminUsers.PATCH("/report", adminHandler.ReportUser)
-				adminUsers.GET("/list/:user_id", adminHandler.ShowUser)
-				adminUsers.GET("/listall", adminHandler.ShowAllUsers)
+				adminUsers.GET("/:user_id", adminHandler.ShowUser)
+				adminUsers.GET("/", adminHandler.ShowAllUsers)
 			}
 
 			category := admin.Group("/category")
@@ -111,8 +118,8 @@ func NewServerHTTP(
 				category.POST("/create", productHandler.CreateCategory)
 				category.PATCH("/update/:id", productHandler.UpdatCategory)
 				category.DELETE("/delete/:category_id", productHandler.DeleteCategory)
-				category.GET("/listall", productHandler.ListAllCategories)
-				category.GET("/list/:id", productHandler.ListCategory)
+				category.GET("/", productHandler.ListAllCategories)
+				category.GET("/:id", productHandler.ListCategory)
 			}
 
 			brand := admin.Group("/brand")
@@ -120,8 +127,8 @@ func NewServerHTTP(
 				brand.POST("/create", productHandler.AddProduct)
 				brand.PATCH("/update/:id", productHandler.UpdateProduct)
 				brand.DELETE("/delete/:id", productHandler.DeleteProduct)
-				brand.GET("/listall", productHandler.ListAllProduct)
-				brand.GET("/list/:id", productHandler.ListProduct)
+				brand.GET("/", productHandler.ListAllProduct)
+				brand.GET("/:id", productHandler.ListProduct)
 			}
 
 			model := admin.Group("/model")
@@ -129,8 +136,8 @@ func NewServerHTTP(
 				model.POST("/add", productHandler.AddModel)
 				model.PATCH("/update/:id", productHandler.UpdateModel)
 				model.DELETE("/delete/:id", productHandler.DeleteModel)
-				model.GET("/listall", productHandler.ListAllModel)
-				model.GET("/list/:id", productHandler.ListModel)
+				model.GET("/", productHandler.ListAllModel)
+				model.GET("/:id", productHandler.ListModel)
 				model.POST("/uploadimage/:id", productHandler.UploadImage)
 			}
 
@@ -147,7 +154,7 @@ func NewServerHTTP(
 			//Sales report
 			sales := admin.Group("/sales")
 			{
-				sales.GET("/get", adminHandler.ViewSalesReport)
+				sales.GET("/", adminHandler.ViewSalesReport)
 				sales.GET("/download", adminHandler.DownloadSalesReport)
 			}
 

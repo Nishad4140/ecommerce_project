@@ -87,14 +87,14 @@ func (c *userUseCase) ForgotPassword(forgotPass helper.ForgotPassword) error {
 
 //-------------------------- View-Profile --------------------------//
 
-func (c *userUseCase) ViewProfile(userID int) (response.UserData, error) {
+func (c *userUseCase) ViewProfile(userID int) (response.Userprofile, error) {
 	profile, err := c.userRepo.ViewProfile(userID)
 	return profile, err
 }
 
 //-------------------------- Edit-Profile --------------------------//
 
-func (c *userUseCase) EditProfile(userID int, updatingDetails helper.UserReq) (response.UserData, error) {
+func (c *userUseCase) EditProfile(userID int, updatingDetails helper.UpdateProfile) (response.Userprofile, error) {
 	updatedProfile, err := c.userRepo.EditProfile(userID, updatingDetails)
 	return updatedProfile, err
 }

@@ -1,7 +1,11 @@
 package helper
 
+type Order struct {
+	PatmentType int
+}
+
 type Cart struct {
-	Id     int
+	Id    int
 	Total int
 }
 
@@ -12,7 +16,14 @@ type CartItems struct {
 	QtyInStock int
 }
 
+type OrderItems struct {
+	ModelId    int
+	Quantity   int
+	Price      int
+	QtyInStock int
+}
+
 type UpdateOrder struct {
-	OrderId       uint
-	OrderStatusID uint
+	OrderId       uint `json:"orderid"`
+	OrderStatusID uint `json:"order_status_id"`
 }

@@ -49,8 +49,8 @@ func (cr *PaymentHandler) CreateRazorpayPayment(c *gin.Context) {
 	// 	})
 	// 	return
 	// }
-	userId := 20
-	order, razorpayID, err := cr.paymentUseCase.CreateRazorpayPayment(userId, orderId)
+	// userId := 20
+	order, razorpayID, userId, err := cr.paymentUseCase.CreateRazorpayPayment(orderId)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, response.Response{
 			StatusCode: 400,

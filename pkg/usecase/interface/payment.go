@@ -6,6 +6,6 @@ import (
 )
 
 type PaymentUseCase interface {
-	CreateRazorpayPayment(userId, orderId int) (domain.Orders, string, error)
+	CreateRazorpayPayment(orderId int) (domain.Orders, string, int, error)
 	UpdatePaymentDetails(paymentVerifier helper.PaymentVerification) error
 }

@@ -25,21 +25,28 @@ func NewPaymentuseCase(paymentRepo interfaces.PaymentRepository, orderRepo inter
 	}
 }
 
-func (c *PaymentUseCase) CreateRazorpayPayment(userId, orderId int) (domain.Orders, string, error) {
+func (c *PaymentUseCase) CreateRazorpayPayment(orderId int) (domain.Orders, string, int, error) {
 	paymentDetails, err := c.paymentRepo.ViewPaymentDetails(orderId)
 	if err != nil {
-		return domain.Orders{}, "", err
+		return domain.Orders{}, "", 0, err
 	}
+
 	if paymentDetails.PaymentStatusID == 3 {
-		return domain.Orders{}, "", fmt.Errorf("payment already completed")
+		return domain.Orders{}, "", 0, fmt.Errorf("payment already completed")
 	}
+	userId, err := c.orderRepo.UserIdFromOrder(orderId)
+	if err != nil {
+		return domain.Orders{}, "", 0, err
+	}
+	fmt.Println("user id ", userId)
 	//fetch order details from the db
 	order, err := c.orderRepo.ListOrder(userId, orderId)
 	if err != nil {
-		return domain.Orders{}, "", err
+		return domain.Orders{}, "", userId, err
 	}
+	fmt.Println(order.Id)
 	if order.Id == 0 {
-		return domain.Orders{}, "", fmt.Errorf("no such order found")
+		return domain.Orders{}, "", userId, fmt.Errorf("no such order found")
 	}
 	client := razorpay.NewClient(c.cfg.RAZORPAYID, c.cfg.RAZORPAYSECRET)
 
@@ -51,12 +58,12 @@ func (c *PaymentUseCase) CreateRazorpayPayment(userId, orderId int) (domain.Orde
 
 	body, err := client.Order.Create(data, nil)
 	if err != nil {
-		return domain.Orders{}, "", err
+		return domain.Orders{}, "", userId, err
 	}
 
 	value := body["id"]
 	razorpayID := value.(string)
-	return order, razorpayID, err
+	return order, razorpayID, userId, err
 }
 
 func (c *PaymentUseCase) UpdatePaymentDetails(paymentVerifier helper.PaymentVerification) error {

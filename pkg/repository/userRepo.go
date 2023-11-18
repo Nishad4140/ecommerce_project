@@ -38,26 +38,40 @@ func (c *userDatabase) UserLogin(email string) (domain.Users, error) {
 
 func (c *userDatabase) UserDetails(email string) (response.UserData, error) {
 	var userData response.UserData
-	err := c.DB.Raw("SELECT id,name,email,mobile FROM user WHERE email=?", email).Scan(&userData).Error
+	err := c.DB.Raw("SELECT id, name, email, mobile FROM users WHERE email=?", email).Scan(&userData).Error
 	return userData, err
-
 }
 
 // -------------------------- View-Profile --------------------------//
 
-func (c *userDatabase) ViewProfile(userID int) (response.UserData, error) {
-	var userData response.UserData
-	findProfile := `SELECT name,email,mobile FROM users WHERE id=?`
+func (c *userDatabase) ViewProfile(userID int) (response.Userprofile, error) {
+	var userData response.Userprofile
+	findProfile := `
+	SELECT users.*, addresses.*
+	FROM users
+	LEFT JOIN addresses ON users.id = addresses.users_id AND addresses.is_default = true
+	WHERE users.id = ?`
+
 	err := c.DB.Raw(findProfile, userID).Scan(&userData).Error
 	return userData, err
 }
 
 // -------------------------- Edit-Profile --------------------------//
 
-func (c *userDatabase) EditProfile(userID int, updatingDetails helper.UserReq) (response.UserData, error) {
-	var userData response.UserData
-	updateProfile := `UPDATE users SET name=$1,email=$2,mobile=$3 WHERE id=$4 RETURNING name,email,mobile`
-	err := c.DB.Raw(updateProfile, updatingDetails.Name, updatingDetails.Email, updatingDetails.Mobile, userID).Scan(&userData).Error
+func (c *userDatabase) EditProfile(userID int, updatingDetails helper.UpdateProfile) (response.Userprofile, error) {
+	var userData response.Userprofile
+	updateProfile := `UPDATE users SET name=$1,mobile=$2 WHERE id=$3 RETURNING name,mobile`
+	err := c.DB.Exec(updateProfile, updatingDetails.Name, updatingDetails.Mobile, userID).Error
+	if err != nil {
+		return userData, err
+	}
+	findProfile := `
+	SELECT users.*, addresses.*
+	FROM users
+	LEFT JOIN addresses ON users.id = addresses.users_id AND addresses.is_default = true
+	WHERE users.id = ?`
+
+	err = c.DB.Raw(findProfile, userID).Scan(&userData).Error
 	return userData, err
 }
 

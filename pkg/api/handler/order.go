@@ -24,6 +24,7 @@ func NewOrderHandler(orderUseCase services.OrderUseCase) *OrderHandler {
 //-------------------------- Order-All --------------------------//
 
 func (cr *OrderHandler) OrderAll(c *gin.Context) {
+	
 	paramsId := c.Param("payment_id")
 	paymentTypeId, err := strconv.Atoi(paramsId)
 	if err != nil {

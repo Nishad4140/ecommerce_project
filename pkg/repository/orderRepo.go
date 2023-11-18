@@ -20,6 +20,10 @@ func NewOrderRepository(DB *gorm.DB) interfaces.OrderRepository {
 //-------------------------- Order-All --------------------------//
 
 func (c *OrderDatabase) OrderAll(id, paymentTypeId int) (domain.Orders, error) {
+
+	paymentStatus := 1
+	orderStatus := 1
+
 	tx := c.DB.Begin()
 
 	//Find the cart id and tottal of the cart
@@ -31,13 +35,13 @@ func (c *OrderDatabase) OrderAll(id, paymentTypeId int) (domain.Orders, error) {
 		return domain.Orders{}, err
 	}
 	if cart.Total == 0 {
-		setTotal := `UPDATE carts SET total=carts.sub_total`
+		setTotal := `UPDATE carts SET total=carts.sub_total+100`
 		err = tx.Exec(setTotal).Error
 		if err != nil {
 			tx.Rollback()
 			return domain.Orders{}, err
 		}
-		cart.Total = cart.SubTotal
+		cart.Total = cart.SubTotal + 100
 	}
 	if cart.SubTotal == 0 {
 		tx.Rollback()
@@ -56,11 +60,47 @@ func (c *OrderDatabase) OrderAll(id, paymentTypeId int) (domain.Orders, error) {
 		return domain.Orders{}, fmt.Errorf("add address pls")
 	}
 
+	if paymentTypeId == 3 {
+		var userWallet domain.UserWallet
+
+		wallet := `SELECT * FROM user_wallets WHERE users_id=$1`
+		err := c.DB.Raw(wallet, id).Scan(&userWallet).Error
+		if err != nil {
+			return domain.Orders{}, err
+		}
+		if userWallet.IsLock {
+			return domain.Orders{}, fmt.Errorf("verify your wallet")
+		}
+
+		if cart.Total <= userWallet.Amount {
+			userWallet.Amount = userWallet.Amount - cart.Total
+			updateWallet := `UPDATE user_wallets SET amount=? WHERE users_id=$1`
+			err := c.DB.Raw(updateWallet, userWallet.Amount, id).Scan(&userWallet).Error
+			if err != nil {
+				return domain.Orders{}, err
+			}
+
+			// cart.Total = 0
+			paymentStatus = 3
+			orderStatus = 2
+		} else {
+			cart.Total = cart.Total - userWallet.Amount
+			updateWallet := `UPDATE user_wallets SET amount=0 WHERE users_id=$1`
+			err := c.DB.Raw(updateWallet, id).Scan(&userWallet).Error
+			if err != nil {
+				return domain.Orders{}, err
+			}
+			paymentTypeId = 2
+			paymentStatus = 1
+		}
+
+	}
+
 	//Add the details to the orders and return the orderid
 	var order domain.Orders
 	insetOrder := `INSERT INTO orders (user_id,order_date,payment_type_id,shipping_address,order_total,order_status_id)
-		VALUES($1,NOW(),$2,$3,$4,1) RETURNING *`
-	err = tx.Raw(insetOrder, id, paymentTypeId, addressId, cart.Total).Scan(&order).Error
+		VALUES($1,NOW(),$2,$3,$4,$5) RETURNING *`
+	err = tx.Raw(insetOrder, id, paymentTypeId, addressId, cart.Total, orderStatus).Scan(&order).Error
 	if err != nil {
 		tx.Rollback()
 		return domain.Orders{}, err
@@ -126,7 +166,7 @@ func (c *OrderDatabase) OrderAll(id, paymentTypeId int) (domain.Orders, error) {
 			payment_status_id,
 			updated_at)
 			VALUES($1,$2,$3,$4,NOW())`
-	if err = tx.Exec(createPaymentDetails, order.Id, order.OrderTotal, paymentTypeId, 1).Error; err != nil {
+	if err = tx.Exec(createPaymentDetails, order.Id, order.OrderTotal, paymentTypeId, paymentStatus).Error; err != nil {
 		tx.Rollback()
 		return domain.Orders{}, err
 	}
@@ -144,7 +184,7 @@ func (c *OrderDatabase) UserCancelOrder(orderId, userId int) error {
 	tx := c.DB.Begin()
 
 	//find the orderd product and qty and update the product_items with those
-	var items []helper.CartItems
+	var items []helper.OrderItems
 	findProducts := `SELECT model_id,quantity FROM order_items WHERE orders_id=?`
 	err := tx.Raw(findProducts, orderId).Scan(&items).Error
 	if err != nil {
@@ -162,6 +202,44 @@ func (c *OrderDatabase) UserCancelOrder(orderId, userId int) error {
 			return err
 		}
 	}
+
+	var orders domain.Orders
+	var payment domain.PaymentDetails
+
+	findOrders := `SELECT * FROM orders WHERE id=?`
+	err = tx.Raw(findOrders, orderId).Scan(&orders).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	findPayment := `SELECT * FROM orders WHERE id=?`
+	err = tx.Raw(findPayment, orderId).Scan(&payment).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if orders.PaymentTypeId == 2 || orders.PaymentTypeId == 3 && payment.PaymentStatusID == 3 {
+		var userWallet domain.UserWallet
+
+		wallet := `SELECT * FROM user_wallets WHERE users_id=$1`
+		err := c.DB.Raw(wallet, userId).Scan(&userWallet).Error
+		if err != nil {
+			return err
+		}
+		if userWallet.IsLock {
+			return fmt.Errorf("verify your wallet")
+		}
+
+		updateWallet := `UPDATE user_wallets SET amount=amount + ? WHERE users_id=?`
+		err = c.DB.Exec(updateWallet, orders.OrderTotal, userId).Error
+		if err != nil {
+			return err
+		}
+
+	}
+
 	//Remove the items from order_items
 	removeItems := `DELETE FROM order_items WHERE orders_id=$1`
 	err = tx.Exec(removeItems, orderId).Error
@@ -188,8 +266,10 @@ func (c *OrderDatabase) UserCancelOrder(orderId, userId int) error {
 
 func (c *OrderDatabase) ListOrder(userId, orderId int) (domain.Orders, error) {
 	var order domain.Orders
+	fmt.Println(userId)
 	findOrder := `SELECT * FROM orders WHERE user_id=$1 AND id=$2`
 	err := c.DB.Raw(findOrder, userId, orderId).Scan(&order).Error
+	fmt.Println(order)
 	return order, err
 }
 
@@ -223,7 +303,7 @@ func (c *OrderDatabase) ReturnOrder(userId, orderId int) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	if orders.OrderStatusID != 3 {
+	if orders.OrderStatusID != 4 {
 		return 0, fmt.Errorf("the order is not deleverd")
 	}
 
@@ -262,4 +342,10 @@ func (c *OrderDatabase) UpdateOrder(updateOrder helper.UpdateOrder) error {
 		return err
 	}
 	return nil
+}
+
+func (c *OrderDatabase) UserIdFromOrder(id int) (int, error) {
+	var userId int
+	err := c.DB.Raw(`SELECT user_id FROM orders WHERE id=?`, id).Scan(&userId).Error
+	return userId, err
 }

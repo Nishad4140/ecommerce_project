@@ -19,6 +19,11 @@ type LoginReq struct {
 	Password string `json:"password"`
 }
 
+type UpdateProfile struct {
+	Name   string `json:"name"`
+	Mobile string `json:"mobile"`
+}
+
 type UpdatePassword struct {
 	OldPassword string `json:"oldpassword" `
 	NewPasswoed string `json:"newpassword" `
@@ -34,7 +39,7 @@ type Address struct {
 	IsDefault    bool   `json:"isdefault" `
 }
 
-type VerifyWallet struct{
-	Email       string `json:"email" binding:"required"`
-	OTP         string `json:"otp"`
+type VerifyWallet struct {
+	Email string `json:"email" binding:"required"`
+	OTP   string `json:"otp"`
 }

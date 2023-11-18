@@ -26,7 +26,7 @@ func (c *PaymentDatabase) ViewPaymentDetails(orderID int) (domain.PaymentDetails
 
 func (c *PaymentDatabase) UpdatePaymentDetails(orderID int, paymentRef string) (domain.PaymentDetails, error) {
 	var updatedPayment domain.PaymentDetails
-	updatePaymentQuery := `	UPDATE payment_details SET payment_type_id = 3, payment_status_id = 3, payment_ref = $1, updated_at = NOW()
+	updatePaymentQuery := `	UPDATE payment_details SET payment_type_id = 2, payment_status_id = 3, payment_ref = $1, updated_at = NOW()
 							WHERE orders_id = $2 RETURNING *;`
 	err := c.DB.Raw(updatePaymentQuery, paymentRef, orderID).Scan(&updatedPayment).Error
 	return updatedPayment, err
