@@ -170,6 +170,11 @@ func NewServerHTTP(
 		{
 			supadmin.POST("/logout", supadminHandler.SupAdminLogout)
 
+			suoAdminAdmins:=supadmin.Group("/admin")
+			{
+				suoAdminAdmins.POST("/create",)
+			}
+
 			supAdminUsers := supadmin.Group("/user")
 			{
 				supAdminUsers.PATCH("/block", supadminHandler.BlockUser)
