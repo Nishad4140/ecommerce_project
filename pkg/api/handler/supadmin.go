@@ -67,6 +67,51 @@ func (cr *SupAdminHandler) SupAdminLogout(c *gin.Context) {
 	})
 }
 
+//-------------------------- Logout --------------------------//
+
+func (cr *SupAdminHandler) CreateAdmin(c *gin.Context) {
+	var adminData helper.AdminData
+	err := c.Bind(&adminData)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Response{
+			StatusCode: 400,
+			Message:    "bind faild",
+			Data:       nil,
+			Errors:     err.Error(),
+		})
+		return
+	}
+
+	admin, err := cr.supadminUseCase.CreateAdmin(adminData)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Response{
+			StatusCode: 400,
+			Message:    "unable create admin",
+			Data:       response.UserData{},
+			Errors:     err.Error(),
+		})
+		return
+	}
+
+	var details = struct {
+		Name   string
+		Email  string
+		Mobile string
+	}{
+		admin.Name,
+		admin.Email,
+		admin.Mobile,
+	}
+
+	c.JSON(http.StatusCreated, response.Response{
+		StatusCode: 201,
+		Message:    "admin created Successfully",
+		Data:       details,
+		Errors:     nil,
+	})
+
+}
+
 //-------------------------- Block-User --------------------------//
 
 func (cr *SupAdminHandler) BlockUser(c *gin.Context) {

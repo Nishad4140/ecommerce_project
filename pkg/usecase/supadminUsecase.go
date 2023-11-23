@@ -5,6 +5,7 @@ import (
 	"time"
 
 	helper "github.com/Nishad4140/ecommerce_project/pkg/common/helperStruct"
+	"github.com/Nishad4140/ecommerce_project/pkg/common/response"
 	interfaces "github.com/Nishad4140/ecommerce_project/pkg/repository/interface"
 	services "github.com/Nishad4140/ecommerce_project/pkg/usecase/interface"
 	"github.com/golang-jwt/jwt"
@@ -33,9 +34,13 @@ func (c *supadminUseCase) SupAdminLogin(supadmin helper.LoginReq) (string, error
 		return "", fmt.Errorf("supadmin is not found")
 	}
 
-	if err = bcrypt.CompareHashAndPassword([]byte(supadminData.Password), []byte(supadmin.Password)); err != nil {
-		return "", err
+	if supadmin.Password != supadminData.Password {
+		return "", fmt.Errorf("incorrect password")
 	}
+
+	// if err = bcrypt.CompareHashAndPassword([]byte(supadminData.Password), []byte(supadmin.Password)); err != nil {
+	// 	return "", err
+	// }
 
 	claims := jwt.MapClaims{
 		"id":  supadminData.ID,
@@ -62,4 +67,14 @@ func (c *supadminUseCase) BlockUser(body helper.BlockData, adminId int) error {
 func (c *supadminUseCase) UnblockUser(id int) error {
 	err := c.supadminRepo.UnblockUser(id)
 	return err
+}
+
+func (c *supadminUseCase) CreateAdmin(adminData helper.AdminData) (response.UserData, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(adminData.Password), 10)
+	if err != nil {
+		return response.UserData{}, err
+	}
+	adminData.Password = string(hash)
+	userData, err := c.supadminRepo.CreateAdmin(adminData)
+	return userData, err
 }

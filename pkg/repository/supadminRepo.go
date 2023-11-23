@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	helper "github.com/Nishad4140/ecommerce_project/pkg/common/helperStruct"
+	"github.com/Nishad4140/ecommerce_project/pkg/common/response"
 	"github.com/Nishad4140/ecommerce_project/pkg/domain"
 	interfaces "github.com/Nishad4140/ecommerce_project/pkg/repository/interface"
 	"gorm.io/gorm"
@@ -89,4 +90,12 @@ func (c *supadminDatabase) UnblockUser(id int) error {
 		return err
 	}
 	return nil
+}
+
+func (c *supadminDatabase) CreateAdmin(adminData helper.AdminData) (response.UserData, error) {
+	var userData response.UserData
+	insertQuery := `INSERT INTO admins (name,email,mobile,password,created_at)VALUES($1,$2,$3,$4,NOW()) 
+					RETURNING id,name,email,mobile`
+	err := c.DB.Raw(insertQuery, adminData.Name, adminData.Email, adminData.Mobile, adminData.Password).Scan(&userData).Error
+	return userData, err
 }
