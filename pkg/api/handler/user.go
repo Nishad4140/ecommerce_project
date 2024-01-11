@@ -152,7 +152,7 @@ func (cr *UserHandler) UserLogin(c *gin.Context) {
 	c.SetCookie("userToken", token, 3600*24*30, "/", "localhost", false, true)
 	c.JSON(http.StatusOK, response.Response{
 		StatusCode: 200,
-		Message:    "login succesfully",
+		Message:    "login successfully",
 		Data:       nil,
 		Errors:     nil,
 	})
@@ -242,7 +242,7 @@ func (cr *UserHandler) ViewProfile(c *gin.Context) {
 			StatusCode: 400,
 			Message:    "Can't find Userid",
 			Data:       nil,
-			Errors:     err.Error(),
+			Errors:     errors.New("user not found"),
 		})
 		return
 	}
@@ -288,6 +288,7 @@ func (cr *UserHandler) EditProfile(c *gin.Context) {
 		})
 		return
 	}
+
 	updatedProfile, err := cr.userUseCase.EditProfile(userID, updatingDetails)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, response.Response{
