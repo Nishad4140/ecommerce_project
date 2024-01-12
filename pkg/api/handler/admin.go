@@ -19,13 +19,15 @@ type AdminHandler struct {
 func NewAdminHandler(usecase services.AdminUseCase) *AdminHandler {
 	return &AdminHandler{
 		adminUseCase: usecase,
-	}
+	}  
 }
 
 //-------------------------- Login --------------------------//
 
 func (cr *AdminHandler) AdminLogin(c *gin.Context) {
 	var admin helper.LoginReq
+
+	// binding the data
 	err := c.BindJSON(&admin)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, response.Response{
