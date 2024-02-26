@@ -70,7 +70,7 @@ func TestUserLogin(t *testing.T) {
 			expectedCode: 400,
 			expectedResponse: response.Response{
 				StatusCode: 400,
-				Message:    "failed to login",
+				Message:    "failed to losdfsfsgin",
 				Data:       nil,
 				Errors:     "invalid credentials",
 			},

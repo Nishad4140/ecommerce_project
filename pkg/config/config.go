@@ -6,11 +6,12 @@ import (
 )
 
 type Config struct {
-	DBHost           string `mapstructure:"DB_HOST"`
-	DBName           string `mapstructure:"DB_NAME"`
-	DBUser           string `mapstructure:"DB_USER"`
-	DBPassword       string `mapstructure:"DB_PASSWORD"`
-	DBSslmode        string `mapstructure:"DB_SSLMODE"`
+	// DBHost           string `mapstructure:"DB_HOST"`
+	// DBName           string `mapstructure:"DB_NAME"`
+	// DBUser           string `mapstructure:"DB_USER"`
+	// DBPassword       string `mapstructure:"DB_PASSWORD"`
+	// DBSslmode        string `mapstructure:"DB_SSLMODE"`
+	DBKey            string `mapstructure:"DB_KEY"`
 	TWILIOACCOUNTSID string `mapstructure:"TWILIO_ACCOUNT_SID"`
 	TWILIOAUTHTOKEN  string `mapstructure:"TWILIO_AUTHTOKEN"`
 	TWILIOSERVICESID string `mapstructure:"TWILIO_SERVICES_ID"`
@@ -19,11 +20,12 @@ type Config struct {
 }
 
 var envs = []string{
-	"DB_HOST",
-	"DB_NAME",
-	"DB_USER",
-	"DB_PASSWORD",
-	"DB_SSLMODE",
+	// "DB_HOST",
+	// "DB_NAME",
+	// "DB_USER",
+	// "DB_PASSWORD",
+	// "DB_SSLMODE",
+	"DB_KEY",
 	"TWILIO_ACCOUNT_SID",
 	"TWILIO_AUTHTOKEN",
 	"TWILIO_SERVICES_ID",

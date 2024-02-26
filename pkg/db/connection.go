@@ -1,8 +1,6 @@
 package db
 
 import (
-	"fmt"
-
 	"github.com/Nishad4140/ecommerce_project/pkg/config"
 	"github.com/Nishad4140/ecommerce_project/pkg/domain"
 	"github.com/Nishad4140/ecommerce_project/routines"
@@ -11,7 +9,7 @@ import (
 )
 
 func ConnectDatabse(cfg config.Config) (*gorm.DB, error) {
-	psqlInfo := fmt.Sprintf("host=%s dbname=%s user=%s password=%s sslmode=%s", cfg.DBHost, cfg.DBName, cfg.DBUser, cfg.DBPassword, cfg.DBSslmode)
+	psqlInfo := cfg.DBKey
 	db, dbErr := gorm.Open(postgres.Open(psqlInfo), &gorm.Config{
 		SkipDefaultTransaction: true,
 	})
